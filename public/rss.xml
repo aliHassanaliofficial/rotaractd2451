@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Rotaract District 2451 News</title>
+    <link>https://rotaractd2451.org</link>
+    <description>Latest news and announcements from Rotaract District 2451</description>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 01 Jun 2026 00:00:00 GMT</lastBuildDate>
+    <atom:link href="https://rotaractd2451.org/rss.xml" rel="self" type="application/rss+xml"/>
+  </channel>
+</rss>
