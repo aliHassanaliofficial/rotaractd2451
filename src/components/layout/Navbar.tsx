@@ -172,7 +172,7 @@ export function Navbar() {
             alt={settings.district_name || 'Rotaract'}
             width={140}
             height={48}
-            className="object-contain transition-transform duration-300 group-hover:scale-105"
+            className="h-12 object-contain transition-transform duration-300 group-hover:scale-105"
             priority
           />
         </Link>

@@ -24,6 +24,9 @@ export interface Profile {
   social_facebook?: string;
   is_active: boolean;
   is_verified: boolean;
+  approval_status?: ApprovalStatus;
+  reviewed_by?: string;
+  reviewed_at?: string;
   created_at: string;
   updated_at: string;
   club?: Club;

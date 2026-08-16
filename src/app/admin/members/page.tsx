@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils/cn'
 import { formatDate } from '@/lib/utils/date'
-import { Search, Mail, Loader2, User } from 'lucide-react'
+import { Search, Mail, Loader2, User, Check, X, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import {
   Card,
@@ -29,10 +30,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
-import type { Profile } from '@/types/database'
+import type { Profile, ApprovalStatus, Club } from '@/types/database'
+
+const statusColors: Record<string, string> = {
+  pending: 'bg-yellow-100 text-yellow-700',
+  approved: 'bg-green-100 text-green-700',
+  rejected: 'bg-red-100 text-red-700',
+}
 
 export default function AdminMembersPage() {
   const [members, setMembers] = useState<(Profile & { club?: any })[]>([])
@@ -40,9 +48,31 @@ export default function AdminMembersPage() {
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
   const [selectedMember, setSelectedMember] = useState<(Profile & { club?: any }) | null>(null)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [clubs, setClubs] = useState<Club[]>([])
+  const [form, setForm] = useState({
+    full_name: '',
+    email: '',
+    password: '',
+    club_id: '',
+  })
   const supabase = createClient()
 
   useEffect(() => { loadMembers() }, [roleFilter])
+
+  useEffect(() => {
+    if (!createOpen) return
+    supabase
+      .from('clubs')
+      .select('*')
+      .eq('is_active', true)
+      .order('name')
+      .then(({ data, error }) => {
+        if (!error) setClubs((data as Club[]) || [])
+      })
+  }, [createOpen, supabase])
 
   async function loadMembers() {
     setLoading(true)
@@ -64,10 +94,54 @@ export default function AdminMembersPage() {
     }
   }
 
+  async function handleApproval(member: Profile, status: ApprovalStatus) {
+    setActionLoading(member.id)
+    try {
+      const res = await fetch(`/api/admin/members/${member.id}/approval`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Failed to update')
+      toast.success(status === 'approved' ? `${member.full_name} approved` : `${member.full_name} rejected`)
+      loadMembers()
+      setSelectedMember(null)
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  async function handleCreateClubAdmin(e: React.FormEvent) {
+    e.preventDefault()
+    setCreating(true)
+    try {
+      const res = await fetch('/api/admin/members', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Failed to create club admin')
+      toast.success(`Club admin account created for ${form.full_name}`)
+      setCreateOpen(false)
+      setForm({ full_name: '', email: '', password: '', club_id: '' })
+      loadMembers()
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to create club admin')
+    } finally {
+      setCreating(false)
+    }
+  }
+
   const filtered = members.filter((m) =>
     m.full_name?.toLowerCase().includes(search.toLowerCase()) ||
     m.email?.toLowerCase().includes(search.toLowerCase())
   )
+
+  const pendingCount = members.filter((m) => m.approval_status === 'pending').length
 
   const roleColors: Record<string, string> = {
     member: 'bg-gray-100 text-gray-700',
@@ -79,8 +153,16 @@ export default function AdminMembersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-navy">Members</h1>
-        <p className="text-sm text-gray-500">{members.length} total members</p>
+        <div>
+          <h1 className="text-3xl font-bold text-navy">Members</h1>
+          <p className="text-sm text-gray-500">
+            {members.length} total members
+            {pendingCount > 0 && ` · ${pendingCount} pending approval`}
+          </p>
+        </div>
+        <Button onClick={() => setCreateOpen(true)}>
+          <UserPlus className="mr-2 h-4 w-4" /> Create Club Admin
+        </Button>
       </div>
 
       <div className="flex items-center gap-4">
@@ -156,8 +238,8 @@ export default function AdminMembersPage() {
                       </td>
                       <td className="px-6 py-4 text-gray-600">{member.club?.name || '-'}</td>
                       <td className="px-6 py-4">
-                        <Badge className={cn(member.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700')} variant="outline">
-                          {member.is_active ? 'Active' : 'Inactive'}
+                        <Badge className={cn('font-medium capitalize', statusColors[member.approval_status || 'approved'] || '')} variant="outline">
+                          {member.approval_status || 'approved'}
                         </Badge>
                       </td>
                       <td className="px-6 py-4 text-gray-500 text-xs">{formatDate(member.created_at)}</td>
@@ -202,8 +284,10 @@ export default function AdminMembersPage() {
                     <p className="font-medium text-navy capitalize">{selectedMember.role.replace('_', ' ')}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500">Status</p>
-                    <p className="font-medium text-navy">{selectedMember.is_active ? 'Active' : 'Inactive'}</p>
+                    <p className="text-gray-500">Approval Status</p>
+                    <Badge className={cn('font-medium capitalize', statusColors[selectedMember.approval_status || 'approved'] || '')} variant="outline">
+                      {selectedMember.approval_status || 'approved'}
+                    </Badge>
                   </div>
                   <div>
                     <p className="text-gray-500">Club</p>
@@ -239,9 +323,104 @@ export default function AdminMembersPage() {
                     <Mail className="mr-2 h-4 w-4" /> Send Email
                   </Button>
                 </div>
+
+                {selectedMember.role === 'member' && selectedMember.approval_status === 'pending' && (
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                      onClick={() => handleApproval(selectedMember, 'approved')}
+                      disabled={actionLoading === selectedMember.id}
+                    >
+                      {actionLoading === selectedMember.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}
+                      Approve Member
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
+                      onClick={() => handleApproval(selectedMember, 'rejected')}
+                      disabled={actionLoading === selectedMember.id}
+                    >
+                      {actionLoading === selectedMember.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="mr-1 h-4 w-4" />}
+                      Reject Member
+                    </Button>
+                  </div>
+                )}
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-navy">Create Club Admin</DialogTitle>
+            <DialogDescription>
+              Create a club admin account. The new admin can sign in immediately.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateClubAdmin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="full_name">Full Name</Label>
+              <Input
+                id="full_name"
+                value={form.full_name}
+                onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                placeholder="Admin name"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder="admin@example.com"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Temporary Password</Label>
+              <Input
+                id="password"
+                type="text"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                placeholder="At least 8 characters"
+                required
+                minLength={8}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Club</Label>
+              <Select value={form.club_id} onValueChange={(v) => setForm({ ...form, club_id: v })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose the club" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clubs.map((club) => (
+                    <SelectItem key={club.id} value={club.id}>
+                      {club.name}
+                      {club.university ? ` - ${club.university}` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)} disabled={creating}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={creating}>
+                {creating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />}
+                Create Account
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

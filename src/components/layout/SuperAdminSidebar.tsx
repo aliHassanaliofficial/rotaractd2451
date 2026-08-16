@@ -48,7 +48,7 @@ export function SuperAdminSidebar({ collapsed, onToggle }: { collapsed: boolean;
       <div className="flex h-16 items-center justify-between border-b border-amber-200 px-4">
         {!collapsed && (
           <Link href="/superadmin" className="flex items-center gap-2">
-            <Image src="/logo.png" alt="Rotaract" width={120} height={36} className="object-contain" />
+            <Image src="/logo.png" alt="Rotaract" width={120} height={36} className="h-9 object-contain" />
             <span className="text-lg font-bold text-amber-800">Super Admin</span>
           </Link>
         )}

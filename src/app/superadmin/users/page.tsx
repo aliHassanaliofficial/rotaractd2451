@@ -11,6 +11,8 @@ import {
   Shield,
   CheckCircle2,
   XCircle,
+  Check,
+  X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -41,13 +43,19 @@ import {
 } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
-import type { Profile, UserRole } from '@/types/database'
+import type { Profile, UserRole, ApprovalStatus } from '@/types/database'
 
 const roleColors: Record<string, string> = {
   member: 'bg-gray-100 text-gray-700',
   club_admin: 'bg-blue-100 text-blue-700',
   district_admin: 'bg-cranberry/10 text-cranberry',
   superadmin: 'bg-amber-100 text-amber-700',
+}
+
+const approvalColors: Record<string, string> = {
+  pending: 'bg-yellow-100 text-yellow-700',
+  approved: 'bg-green-100 text-green-700',
+  rejected: 'bg-red-100 text-red-700',
 }
 
 export default function SuperAdminUsersPage() {
@@ -60,6 +68,7 @@ export default function SuperAdminUsersPage() {
   const [newRole, setNewRole] = useState<UserRole>('member')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [approvalLoading, setApprovalLoading] = useState<string | null>(null)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [importing, setImporting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -119,6 +128,25 @@ export default function SuperAdminUsersPage() {
       loadUsers()
     } catch {
       toast.error('Failed to toggle account status')
+    }
+  }
+
+  async function handleApproval(user: Profile & { club?: any }, status: ApprovalStatus) {
+    setApprovalLoading(user.id)
+    try {
+      const res = await fetch(`/api/admin/members/${user.id}/approval`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Failed to update')
+      toast.success(status === 'approved' ? `${user.full_name} approved` : `${user.full_name} rejected`)
+      loadUsers()
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update')
+    } finally {
+      setApprovalLoading(null)
     }
   }
 
@@ -251,13 +279,14 @@ export default function SuperAdminUsersPage() {
                     <th className="pb-3 pr-4">Club</th>
                     <th className="pb-3 pr-4">Active</th>
                     <th className="pb-3 pr-4">Verified</th>
+                    <th className="pb-3 pr-4">Approval</th>
                     <th className="pb-3 pr-4">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-8 text-center text-gray-400">
+                      <td colSpan={8} className="py-8 text-center text-gray-400">
                         No users found
                       </td>
                     </tr>
@@ -293,6 +322,41 @@ export default function SuperAdminUsersPage() {
                           <Badge variant={user.is_verified ? 'default' : 'outline'}>
                             {user.is_verified ? 'Verified' : 'Unverified'}
                           </Badge>
+                        </td>
+                        <td className="py-3 pr-4">
+                          <div className="flex items-center gap-1">
+                            <Badge className={approvalColors[user.approval_status || 'approved']} variant="outline">
+                              {user.approval_status || 'approved'}
+                            </Badge>
+                            {user.role === 'member' && user.approval_status === 'pending' && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-green-600 hover:bg-green-50"
+                                  title="Approve membership"
+                                  onClick={() => handleApproval(user, 'approved')}
+                                  disabled={approvalLoading === user.id}
+                                >
+                                  {approvalLoading === user.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Check className="h-4 w-4" />
+                                  )}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-red-500 hover:bg-red-50"
+                                  title="Reject membership"
+                                  onClick={() => handleApproval(user, 'rejected')}
+                                  disabled={approvalLoading === user.id}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </td>
                         <td className="py-3">
                           <div className="flex items-center gap-1">

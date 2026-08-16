@@ -142,7 +142,7 @@ export default function TicketPage({ params, searchParams }: Props) {
           <div className="bg-gradient-to-r from-navy via-navy to-cranberry p-6 text-white">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Image src="/logo.png" alt="Rotaract" width={120} height={36} className="object-contain" />
+                  <Image src="/logo.png" alt="Rotaract" width={120} height={36} className="h-9 object-contain" />
                   <div>
                     <p className="text-sm font-semibold text-gold">Entry Ticket</p>
                   </div>

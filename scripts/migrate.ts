@@ -431,6 +431,7 @@ ALTER TABLE contact_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE club_officers ENABLE ROW LEVEL SECURITY;
 
 -- Helper function
 CREATE OR REPLACE FUNCTION get_user_role()
@@ -500,6 +501,35 @@ DO $$ BEGIN
     USING (get_user_role() IN ('district_admin','superadmin')
       OR (get_user_role() = 'club_admin'
           AND id = (SELECT club_id FROM profiles WHERE id = auth.uid())));
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+
+-- ── CLUB OFFICERS ─────────────────────────────────────────────
+GRANT SELECT, INSERT, UPDATE, DELETE ON club_officers TO authenticated;
+GRANT SELECT ON club_officers TO anon;
+
+DO $$ BEGIN
+  DROP POLICY IF EXISTS "club_officers_public_read" ON club_officers;
+  CREATE POLICY "club_officers_public_read" ON club_officers FOR SELECT USING (TRUE);
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  DROP POLICY IF EXISTS "club_officers_club_admin_manage" ON club_officers;
+  CREATE POLICY "club_officers_club_admin_manage" ON club_officers FOR ALL
+    USING (get_user_role() = 'club_admin'
+      AND (club_id = (SELECT club_id FROM profiles WHERE id = auth.uid())
+        OR club_id IN (SELECT club_id FROM club_admins WHERE profile_id = auth.uid())))
+    WITH CHECK (get_user_role() = 'club_admin'
+      AND (club_id = (SELECT club_id FROM profiles WHERE id = auth.uid())
+        OR club_id IN (SELECT club_id FROM club_admins WHERE profile_id = auth.uid())));
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  DROP POLICY IF EXISTS "club_officers_district_admin_all" ON club_officers;
+  CREATE POLICY "club_officers_district_admin_all" ON club_officers FOR ALL
+    USING (get_user_role() IN ('district_admin','superadmin'));
 EXCEPTION WHEN undefined_table THEN NULL;
 END $$;
 

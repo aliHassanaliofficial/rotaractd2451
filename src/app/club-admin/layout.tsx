@@ -14,6 +14,8 @@ import {
   Image as ImageIcon,
   Users,
   Bell,
+  Medal,
+  Settings,
   ChevronLeft,
   ArrowLeft,
   LogOut,
@@ -21,6 +23,7 @@ import {
   ShieldAlert,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/lib/supabase/client'
 
 const sidebarLinks = [
@@ -30,14 +33,17 @@ const sidebarLinks = [
   { href: '/club-admin/calendar', label: 'Calendar', icon: Calendar },
   { href: '/club-admin/gallery', label: 'Gallery', icon: ImageIcon },
   { href: '/club-admin/members', label: 'Members', icon: Users },
+  { href: '/club-admin/officers', label: 'Officers', icon: Medal },
   { href: '/club-admin/notifications', label: 'Notifications', icon: Bell },
+  { href: '/club-admin/settings', label: 'Settings', icon: Settings },
 ]
 
 export default function ClubAdminLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [pendingMembers, setPendingMembers] = useState(0)
   const { user, loading: userLoading } = useUser()
-  const { isClubAdmin } = useRole()
+  const { isClubAdmin, clubId, assignedClubIds } = useRole()
   const router = useRouter()
   const pathname = usePathname()
   const supabase = createClient()
@@ -45,6 +51,17 @@ export default function ClubAdminLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  useEffect(() => {
+    const clubs = assignedClubIds.length > 0 ? assignedClubIds : clubId ? [clubId] : []
+    if (clubs.length === 0) return
+    supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('approval_status', 'pending')
+      .in('club_id', clubs)
+      .then(({ count }) => setPendingMembers(count || 0))
+  }, [clubId, assignedClubIds, supabase])
 
   useEffect(() => {
     if (!mounted) return
@@ -88,7 +105,7 @@ export default function ClubAdminLayout({ children }: { children: React.ReactNod
         <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4">
           {!collapsed && (
             <Link href="/club-admin" className="flex items-center gap-2">
-              <Image src="/logo.png" alt="Rotaract" width={120} height={36} className="object-contain" />
+              <Image src="/logo.png" alt="Rotaract" width={120} height={36} className="h-9 object-contain" />
               <span className="text-lg font-bold text-navy">Club Panel</span>
             </Link>
           )}
@@ -103,6 +120,7 @@ export default function ClubAdminLayout({ children }: { children: React.ReactNod
               link.href === '/club-admin'
                 ? pathname === '/club-admin'
                 : pathname === link.href || pathname.startsWith(link.href + '/')
+            const isMembersLink = link.href === '/club-admin/members'
             return (
               <Link
                 key={link.href}
@@ -116,7 +134,10 @@ export default function ClubAdminLayout({ children }: { children: React.ReactNod
                 title={collapsed ? link.label : undefined}
               >
                 <link.icon className="h-5 w-5 shrink-0" />
-                {!collapsed && <span>{link.label}</span>}
+                {!collapsed && <span className="flex-1">{link.label}</span>}
+                {!collapsed && isMembersLink && pendingMembers > 0 && (
+                  <Badge className="bg-yellow-100 text-yellow-700 text-xs">{pendingMembers}</Badge>
+                )}
               </Link>
             )
           })}

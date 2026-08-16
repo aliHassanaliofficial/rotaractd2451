@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { AvatarUpload } from '@/components/member/AvatarUpload'
 import {
   Select,
   SelectContent,
@@ -31,18 +32,26 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
+const PHONE_REGEX = /^01\d{9}$/
+const PHONE_ERROR = 'Phone number must be 11 digits starting with 01 (e.g. 01234567890)'
+
 const registerSchema = z
   .object({
     full_name: z.string().min(2, 'Full name is required'),
     email: z.string().email('Please enter a valid email'),
-    phone: z
+    phone: z.string().regex(PHONE_REGEX, PHONE_ERROR),
+    club_id: z.string().min(1, 'Please select your club'),
+    occupation: z.string().min(1, 'Occupation is required').max(100),
+    graduation_year: z
       .string()
       .optional()
       .refine(
-        (val) => !val || /^[\d\s\-\+\(\)]{7,20}$/.test(val),
-        'Please enter a valid phone number'
+        (val) => !val || (Number(val) >= 1900 && Number(val) <= 2100),
+        'Invalid graduation year'
       ),
-    club_id: z.string().min(1, 'Please select your club'),
+    social_linkedin: z.string().url('Please enter a valid LinkedIn URL'),
+    social_instagram: z.string().url('Please enter a valid Instagram URL'),
+    social_facebook: z.string().url('Please enter a valid Facebook URL'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirm_password: z.string().min(1, 'Please confirm your password'),
   })
@@ -60,6 +69,8 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [cooldown, setCooldown] = useState(0)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [avatarTouched, setAvatarTouched] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -99,10 +110,16 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormData) => {
     if (cooldown > 0) return
 
+    if (!avatarUrl) {
+      setAvatarTouched(true)
+      toast.error('Please upload your profile photo')
+      return
+    }
+
     const res = await fetch('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, avatar_url: avatarUrl }),
     })
 
     if (res.status === 429) {
@@ -118,7 +135,7 @@ export default function RegisterPage() {
       return
     }
 
-    toast.success('Account created! Please check your email to verify.')
+    toast.success('Account created! Check your email to verify. Your club will approve your membership before it activates.')
     router.push('/verify')
   }
 
@@ -128,12 +145,12 @@ export default function RegisterPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        className="w-full max-w-lg"
       >
         <Card className="border-gold/30 shadow-xl">
           <CardHeader className="space-y-1 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center">
-              <Image src="/logo.png" alt="Rotaract" width={120} height={48} className="object-contain" />
+              <Image src="/logo.png" alt="Rotaract" width={120} height={48} className="h-12 object-contain" />
             </div>
             <CardTitle className="text-2xl font-bold text-navy">
               Join Rotaract
@@ -144,6 +161,19 @@ export default function RegisterPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <AvatarUpload
+                  value={avatarUrl}
+                  onChange={(url) => {
+                    setAvatarUrl(url)
+                    setAvatarTouched(true)
+                  }}
+                />
+                {avatarTouched && !avatarUrl && (
+                  <p className="text-xs text-red-500">Profile photo is required</p>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="full_name">Full Name</Label>
                 <Input
@@ -172,11 +202,11 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone (optional)</Label>
+                <Label htmlFor="phone">Phone Number</Label>
                 <Input
                   id="phone"
                   type="tel"
-                  placeholder="+20 100 000 0000"
+                  placeholder="01234567890"
                   {...register('phone')}
                 />
                 {errors.phone && (
@@ -219,6 +249,69 @@ export default function RegisterPage() {
                   <p className="text-xs text-red-500">
                     {errors.club_id.message}
                   </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="occupation">Occupation</Label>
+                <Input
+                  id="occupation"
+                  placeholder="e.g. Software Engineer"
+                  {...register('occupation')}
+                />
+                {errors.occupation && (
+                  <p className="text-xs text-red-500">{errors.occupation.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="graduation_year">Graduation Year (optional)</Label>
+                <Input
+                  id="graduation_year"
+                  type="number"
+                  placeholder="e.g. 2026"
+                  min={1900}
+                  max={2100}
+                  {...register('graduation_year')}
+                />
+                {errors.graduation_year && (
+                  <p className="text-xs text-red-500">{errors.graduation_year.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="social_linkedin">LinkedIn URL</Label>
+                <Input
+                  id="social_linkedin"
+                  placeholder="https://linkedin.com/in/..."
+                  {...register('social_linkedin')}
+                />
+                {errors.social_linkedin && (
+                  <p className="text-xs text-red-500">{errors.social_linkedin.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="social_instagram">Instagram URL</Label>
+                <Input
+                  id="social_instagram"
+                  placeholder="https://instagram.com/..."
+                  {...register('social_instagram')}
+                />
+                {errors.social_instagram && (
+                  <p className="text-xs text-red-500">{errors.social_instagram.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="social_facebook">Facebook URL</Label>
+                <Input
+                  id="social_facebook"
+                  placeholder="https://facebook.com/..."
+                  {...register('social_facebook')}
+                />
+                {errors.social_facebook && (
+                  <p className="text-xs text-red-500">{errors.social_facebook.message}</p>
                 )}
               </div>
 

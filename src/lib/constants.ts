@@ -26,18 +26,25 @@ export function getCalendarTypeColors(type?: string | null) {
   return CALENDAR_TYPES.find((t) => t.value === value) ?? CALENDAR_TYPES[0]
 }
 
-export const OFFICER_POSITIONS = [
-  'President',
-  'Vice President',
-  'Secretary',
-  'Treasurer',
-  'Director of Service',
-  'Director of Professional Development',
-  'Director of Public Relations',
-  'Director of Membership',
-  'Director of Finance',
-  'Past President',
+export const CLUB_OFFICER_GROUPS = [
+  {
+    label: 'High Board',
+    positions: ['President', 'Vice President', 'Treasurer', 'Secretary', 'Club Advisor'],
+  },
+  {
+    label: 'Board',
+    positions: [
+      'Club Public Image Director',
+      'Club Service Director',
+      'Club Community Service Director',
+      'Club International Director',
+      'Club Fundraising Director',
+      'Club Personal Development Director',
+    ],
+  },
 ] as const
+
+export const OFFICER_POSITIONS = CLUB_OFFICER_GROUPS.flatMap((group) => group.positions)
 
 export const MILESTONE_TYPES = [
   { value: 'founding', label: 'Founding', color: 'bg-gold' },

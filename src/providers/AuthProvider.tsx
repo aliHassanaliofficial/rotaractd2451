@@ -21,26 +21,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false
 
     const fetchProfile = async (userId: string) => {
-      const { data, error } = await supabase.current
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
-      if (cancelled) return null
-      if (data && !error) {
-        if (data.club_id) {
-          const { data: club } = await supabase.current
-            .from('clubs')
-            .select('*')
-            .eq('id', data.club_id)
-            .single()
-          if (!cancelled) {
+      const query = async () => {
+        const { data, error } = await supabase.current
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single()
+        if (data && !error) {
+          if (data.club_id) {
+            const { data: club } = await supabase.current
+              .from('clubs')
+              .select('*')
+              .eq('id', data.club_id)
+              .single()
             return { ...data, club: club || undefined }
           }
+          return data
         }
-        return data
+        return null
       }
-      return null
+
+      let profile = await query()
+      if (cancelled) return null
+
+      // Logged-in user with no profiles row (e.g. OAuth sign-in that never ran
+      // the callback, a deleted profile, or a backfill gap). Heal it server-side
+      // so the user shows up in admin/member listings instead of the app
+      // treating them as signed out.
+      if (!profile) {
+        try {
+          await fetch('/api/auth/ensure-profile', { method: 'POST' })
+        } catch {
+          // Ignore network errors; the callback path still heals on next OAuth.
+        }
+        if (cancelled) return null
+        profile = await query()
+      }
+
+      return profile
     }
 
     let profileFetchInFlight: string | null = null

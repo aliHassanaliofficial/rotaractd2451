@@ -102,8 +102,8 @@ export default function LoginPage({
       >
         <Card className="border-gold/30 shadow-xl">
           <CardHeader className="space-y-1 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center">
-              <Image src="/logo.png" alt="Rotaract" width={140} height={56} className="object-contain" />
+            <div className="mx-auto mb-4 flex items-center justify-center">
+              <Image src="/logo.png" alt="Rotaract" width={140} height={56} className="h-14 max-w-none object-contain" />
             </div>
             <CardTitle className="text-2xl font-bold text-navy">
               Welcome Back

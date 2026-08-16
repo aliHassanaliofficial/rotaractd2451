@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { ensureProfile } from '@/lib/supabase/ensure-profile'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -11,33 +11,13 @@ export async function GET(request: Request) {
     const supabase = await createServerSupabaseClient()
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error && data.user) {
-      const user = data.user
-
       // Google/SSO users don't go through /api/auth/signup, so ensure a
       // profiles row exists (profiles.id = auth.users.id). Without it, every
-      // .single() profile query returns PGRST116 -> 406.
-      const admin = createAdminClient()
-      const { data: existing } = await admin
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle()
-
-      if (!existing) {
-        const fullName =
-          user.user_metadata?.full_name ||
-          user.user_metadata?.name ||
-          user.email?.split('@')[0] ||
-          'Member'
-
-        await admin.from('profiles').insert({
-          id: user.id,
-          full_name: fullName,
-          email: user.email || '',
-          role: 'member',
-          is_active: true,
-          is_verified: false,
-        })
+      // .single() profile query returns PGRST116 -> 406 and the user is
+      // invisible in admin/member listings.
+      const result = await ensureProfile(data.user)
+      if (result.error) {
+        console.error('Failed to create profile for OAuth user:', result.error)
       }
 
       return NextResponse.redirect(`${origin}${next}`)

@@ -226,6 +226,27 @@ export default async function ClubDetailPage({ params }: Props) {
                           <ExternalLink className="h-3 w-3" />
                         </a>
                       )}
+                      {club.instagram && (
+                        <a href={club.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-gray-600 hover:text-cranberry">
+                          <Camera className="h-4 w-4 text-gold" />
+                          Instagram
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                      {club.facebook && (
+                        <a href={club.facebook} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-gray-600 hover:text-cranberry">
+                          <MessageCircle className="h-4 w-4 text-gold" />
+                          Facebook
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                      {club.linkedin && (
+                        <a href={club.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-gray-600 hover:text-cranberry">
+                          <Globe className="h-4 w-4 text-gold" />
+                          LinkedIn
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
                       {club.meeting_location && (
                         <div className="flex items-start gap-2 text-sm text-gray-600">
                           <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gold" />

@@ -147,6 +147,13 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
+DO $$ BEGIN
+  CREATE POLICY "clubs_club_admin_write" ON clubs FOR UPDATE
+    USING (get_user_role() = 'club_admin' AND (id IN (SELECT get_assigned_clubs())))
+    WITH CHECK (get_user_role() = 'club_admin' AND (id IN (SELECT get_assigned_clubs())));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
 -- REGISTRATIONS
 DO $$ BEGIN
   CREATE POLICY "regs_own_read" ON registrations FOR SELECT
@@ -299,5 +306,30 @@ END $$;
 DO $$ BEGIN
   CREATE POLICY "club_admins_delete" ON club_admins FOR DELETE
     USING (get_user_role() = 'superadmin');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- ── CLUB OFFICERS ────────────────────────────────────────────
+ALTER TABLE club_officers ENABLE ROW LEVEL SECURITY;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON club_officers TO authenticated;
+GRANT SELECT ON club_officers TO anon;
+
+DO $$ BEGIN
+  CREATE POLICY "club_officers_public_read" ON club_officers FOR SELECT
+    USING (TRUE);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "club_officers_club_admin_manage" ON club_officers FOR ALL
+    USING (get_user_role() = 'club_admin' AND (club_id IN (SELECT get_assigned_clubs())))
+    WITH CHECK (get_user_role() = 'club_admin' AND (club_id IN (SELECT get_assigned_clubs())));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "club_officers_district_admin_all" ON club_officers FOR ALL
+    USING (get_user_role() IN ('district_admin', 'superadmin'));
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;

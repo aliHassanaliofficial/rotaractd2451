@@ -47,6 +47,7 @@ export function AdminSidebar({ collapsed, onToggle }: { collapsed: boolean; onTo
   const pathname = usePathname()
   const { isSuperAdmin } = useRole()
   const [pendingCount, setPendingCount] = useState(0)
+  const [pendingMembers, setPendingMembers] = useState(0)
   const supabase = createClient()
 
   useEffect(() => {
@@ -57,12 +58,14 @@ export function AdminSidebar({ collapsed, onToggle }: { collapsed: boolean; onTo
 
   async function loadPendingCount() {
     try {
-      const [{ count: p }, { count: e }, { count: g }] = await Promise.all([
+      const [{ count: p }, { count: e }, { count: g }, { count: m }] = await Promise.all([
         supabase.from('posts').select('*', { count: 'exact', head: true }).eq('approval_status', 'pending'),
         supabase.from('events').select('*', { count: 'exact', head: true }).eq('approval_status', 'pending'),
         supabase.from('gallery_albums').select('*', { count: 'exact', head: true }).eq('approval_status', 'pending'),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('approval_status', 'pending'),
       ])
       setPendingCount((p || 0) + (e || 0) + (g || 0))
+      setPendingMembers(m || 0)
     } catch {
       // silent
     }
@@ -83,7 +86,7 @@ export function AdminSidebar({ collapsed, onToggle }: { collapsed: boolean; onTo
       <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4">
         {!collapsed && (
           <Link href="/admin" className="flex items-center gap-2">
-            <Image src="/logo.png" alt="Rotaract" width={120} height={36} className="object-contain" />
+            <Image src="/logo.png" alt="Rotaract" width={120} height={36} className="h-9 object-contain" />
             <span className="text-lg font-bold text-navy">Admin</span>
           </Link>
         )}
@@ -99,6 +102,7 @@ export function AdminSidebar({ collapsed, onToggle }: { collapsed: boolean; onTo
               ? pathname === '/admin'
               : pathname === link.href || pathname.startsWith(link.href + '/')
           const isPendingLink = link.href === '/admin/pending'
+          const isMembersLink = link.href === '/admin/members'
           return (
             <Link
               key={link.href}
@@ -117,6 +121,9 @@ export function AdminSidebar({ collapsed, onToggle }: { collapsed: boolean; onTo
               )}
               {!collapsed && isPendingLink && pendingCount > 0 && (
                 <Badge className="bg-yellow-100 text-yellow-700 text-xs">{pendingCount}</Badge>
+              )}
+              {!collapsed && isMembersLink && pendingMembers > 0 && (
+                <Badge className="bg-yellow-100 text-yellow-700 text-xs">{pendingMembers}</Badge>
               )}
             </Link>
           )

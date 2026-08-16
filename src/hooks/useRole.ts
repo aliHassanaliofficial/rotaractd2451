@@ -32,6 +32,9 @@ export function useRole() {
     isSuperAdmin: profile?.role === 'superadmin',
     isAdmin: profile?.role === 'club_admin' || profile?.role === 'district_admin' || profile?.role === 'superadmin',
     isStaff: profile?.role && ['club_admin', 'district_admin', 'superadmin'].includes(profile.role) ? true : false,
+    approvalStatus: profile?.approval_status ?? 'approved',
+    isApproved: (profile?.approval_status ?? 'approved') === 'approved',
+    isPendingApproval: profile?.approval_status === 'pending',
     clubId: profile?.club_id,
     assignedClubIds,
   }

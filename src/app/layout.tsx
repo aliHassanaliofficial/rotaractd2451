@@ -5,6 +5,7 @@ import { SiteChrome } from '@/components/layout/SiteChrome'
 import { Toaster } from '@/components/ui/sonner'
 import { QueryProvider } from '@/components/providers/QueryProvider'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
+import { MembershipGate } from '@/components/member/MembershipGate'
 
 const inter = Inter({
   variable: '--font-inter',
@@ -74,7 +75,9 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col">
         <QueryProvider>
           <ThemeProvider attribute="class" defaultTheme="light">
-            <SiteChrome>{children}</SiteChrome>
+            <SiteChrome>
+              <MembershipGate>{children}</MembershipGate>
+            </SiteChrome>
             <Toaster richColors position="top-right" />
           </ThemeProvider>
         </QueryProvider>

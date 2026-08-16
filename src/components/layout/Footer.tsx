@@ -45,7 +45,7 @@ export function Footer() {
         <div className="grid gap-8 md:grid-cols-4">
           <div>
             <div className="mb-4 flex items-center gap-2">
-              <Image src={logoUrl} alt={districtName} width={140} height={48} className="object-contain" />
+              <Image src={logoUrl} alt={districtName} width={140} height={48} className="h-12 object-contain" />
             </div>
             <p className="text-sm text-gray-300">{tagline}</p>
             {socialLinks.length > 0 && (

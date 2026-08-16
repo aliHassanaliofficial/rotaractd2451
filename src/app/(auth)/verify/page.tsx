@@ -67,6 +67,14 @@ export default function VerifyPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 text-center">
+            <div className="rounded-2xl bg-amber-50 p-4 text-left text-sm text-amber-800">
+              <p className="font-medium">Almost there!</p>
+              <p className="mt-1 text-amber-700">
+                After you verify your email, your club admin and the district team will review
+                your registration and activate your membership. This usually takes a few days.
+              </p>
+            </div>
+
             <div className="rounded-2xl bg-blue-50 p-4 text-left text-sm text-blue-800">
               <p className="font-medium">Didn&apos;t receive the email?</p>
               <ul className="mt-1 list-inside list-disc space-y-1 text-blue-700">
