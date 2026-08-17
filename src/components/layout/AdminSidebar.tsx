@@ -21,6 +21,7 @@ import {
   LogOut,
   Shield,
   ClipboardCheck,
+  Award,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -36,6 +37,7 @@ const sidebarLinks = [
   { href: '/admin/announcements', label: 'Announcements', icon: Megaphone },
   { href: '/admin/clubs', label: 'Clubs', icon: Building2 },
   { href: '/admin/members', label: 'Members', icon: Users },
+  { href: '/admin/leadership', label: 'Leadership', icon: Award },
   { href: '/admin/gallery', label: 'Gallery', icon: ImageIcon },
   { href: '/admin/library', label: 'Library', icon: BookOpen },
   { href: '/admin/messages', label: 'Messages', icon: MessageSquare },

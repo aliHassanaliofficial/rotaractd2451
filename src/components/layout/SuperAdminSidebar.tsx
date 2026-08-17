@@ -24,7 +24,7 @@ const sidebarLinks = [
   { href: '/superadmin/users', label: 'Users', icon: Users },
   { href: '/superadmin/settings', label: 'Settings', icon: Settings },
   { href: '/superadmin/history', label: 'History', icon: History },
-  { href: '/superadmin/leadership', label: 'Leadership', icon: Award },
+  { href: '/admin/leadership', label: 'Leadership', icon: Award },
   { href: '/superadmin/audit-log', label: 'Audit Log', icon: ClipboardList },
   { href: '/superadmin/system', label: 'System Health', icon: Activity },
 ]
