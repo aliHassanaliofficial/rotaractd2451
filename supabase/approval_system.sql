@@ -286,7 +286,7 @@ END $$;
 
 DO $$ BEGIN
   CREATE POLICY "settings_superadmin_write" ON site_settings FOR ALL
-    USING (get_user_role() = 'superadmin');
+    USING (get_user_role() IN ('district_admin', 'superadmin'));
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 

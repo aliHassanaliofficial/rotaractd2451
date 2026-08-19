@@ -73,18 +73,20 @@ export default async function HomePage() {
     getClubs({ limit: 12 }).catch(() => []),
     getPinned().catch(() => []),
     getCurrentLeadership().catch(() => []),
-    getSiteSettingsServer(['hero_slides', 'welcome_message', 'district_theme']).catch(() => null),
+    getSiteSettingsServer(['hero_slides', 'welcome_message', 'district_theme', 'about_page']).catch(() => null),
   ])
 
   const governor = leadership?.find((l) => l.position === 'District Governor')
   const welcomeMsg = settings?.welcome_message as { title?: string; message?: string } | undefined
   const heroSlides = mapHeroSlides(settings?.hero_slides as HeroSlideSetting[] | undefined | null)
 
+  const aboutStats = (settings?.about_page as { stats?: { label: string; value: string; icon?: string }[] } | undefined)?.stats
+
   const stats = [
-    { label: 'Active Clubs', value: clubs.length, icon: 'users', suffix: '+' },
-    { label: 'Members', value: 1200, icon: 'users', suffix: '+' },
-    { label: 'Events This Year', value: 45, icon: 'calendar', suffix: '+' },
-    { label: 'Years of Service', value: 10, icon: 'clock', suffix: '+' },
+    { label: aboutStats?.[0]?.label || 'Active Clubs', value: parseInt(aboutStats?.[0]?.value || '0') || clubs.length, icon: aboutStats?.[0]?.icon || 'users', suffix: '+' },
+    { label: aboutStats?.[1]?.label || 'Members', value: parseInt(aboutStats?.[1]?.value || '0'), icon: aboutStats?.[1]?.icon || 'users', suffix: '+' },
+    { label: aboutStats?.[2]?.label || 'Events This Year', value: parseInt(aboutStats?.[2]?.value || '0'), icon: aboutStats?.[2]?.icon || 'calendar', suffix: '+' },
+    { label: aboutStats?.[3]?.label || 'Years of Service', value: parseInt(aboutStats?.[3]?.value || '0'), icon: aboutStats?.[3]?.icon || 'clock', suffix: '+' },
   ]
 
   return (
@@ -260,16 +262,16 @@ export default async function HomePage() {
               <div className="mb-6 flex justify-center">
                 <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-4 border-gold">
                   {governor.photo_url ? (
-                    <Image src={governor.photo_url} alt={governor.profile?.full_name || ''} width={128} height={128} className="object-cover" />
+                    <Image src={governor.photo_url} alt={governor.name || ''} width={128} height={128} className="object-cover" />
                   ) : (
                     <span className="text-4xl font-bold text-gold">
-                      {governor.profile?.full_name?.charAt(0) || 'G'}
+                      {governor.name?.charAt(0) || 'G'}
                     </span>
                   )}
                 </div>
               </div>
               <p className="mb-2 text-xl font-semibold">
-                {governor.profile?.full_name || 'District Governor'}
+                {governor.name || 'District Governor'}
               </p>
               <p className="mb-6 text-gray-300">{governor.position}</p>
               <blockquote className="text-lg leading-relaxed text-gray-200">

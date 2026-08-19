@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Trash2, Loader2, CheckCircle2, XCircle } from 'lucide-react'
+import { v4 as uuidv4 } from 'uuid'
+import { Plus, Trash2, Loader2, CheckCircle2, XCircle, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -26,21 +27,22 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { toast } from 'sonner'
-import type { DistrictLeadership, Profile } from '@/types/database'
+import type { DistrictLeadership } from '@/types/database'
 
 export default function AdminLeadershipPage() {
-  const [leaders, setLeaders] = useState<(DistrictLeadership & { profile?: Profile })[]>([])
-  const [profiles, setProfiles] = useState<Profile[]>([])
+  const [leaders, setLeaders] = useState<DistrictLeadership[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedYear, setSelectedYear] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [editingLeader, setEditingLeader] = useState<(DistrictLeadership & { profile?: Profile }) | null>(null)
+  const [editingLeader, setEditingLeader] = useState<DistrictLeadership | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const photoInputRef = useRef<HTMLInputElement>(null)
 
   const [form, setForm] = useState({
-    profile_id: '',
+    name: '',
     position: '',
     year: new Date().getFullYear().toString(),
     bio: '',
@@ -51,7 +53,7 @@ export default function AdminLeadershipPage() {
   const supabase = createClient()
 
   useEffect(() => {
-    Promise.all([loadProfiles(), loadYears()])
+    loadYears()
   }, [])
 
   useEffect(() => {
@@ -70,7 +72,7 @@ export default function AdminLeadershipPage() {
     try {
       const { data, error } = await supabase
         .from('district_leadership')
-        .select('*, profile:profile_id(*)')
+        .select('*')
         .eq('year', selectedYear)
         .order('sort_order', { ascending: true })
       if (error) throw error
@@ -82,19 +84,10 @@ export default function AdminLeadershipPage() {
     }
   }
 
-  async function loadProfiles() {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('is_active', true)
-      .order('full_name')
-    if (!error) setProfiles(data || [])
-  }
-
   function openNew() {
     setEditingLeader(null)
     setForm({
-      profile_id: '',
+      name: '',
       position: '',
       year: selectedYear,
       bio: '',
@@ -104,10 +97,10 @@ export default function AdminLeadershipPage() {
     setDialogOpen(true)
   }
 
-  function openEdit(leader: DistrictLeadership & { profile?: Profile }) {
+  function openEdit(leader: DistrictLeadership) {
     setEditingLeader(leader)
     setForm({
-      profile_id: leader.profile_id || '',
+      name: leader.name || '',
       position: leader.position,
       year: leader.year,
       bio: leader.bio || '',
@@ -115,6 +108,30 @@ export default function AdminLeadershipPage() {
       is_current: leader.is_current,
     })
     setDialogOpen(true)
+  }
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Photo must be under 2MB')
+      return
+    }
+    setUploadingPhoto(true)
+    try {
+      const ext = file.name.split('.').pop()
+      const filePath = `leadership/${uuidv4()}.${ext}`
+      const { error } = await supabase.storage.from('gallery').upload(filePath, file, { upsert: true })
+      if (error) throw error
+      const { data: urlData } = supabase.storage.from('gallery').getPublicUrl(filePath)
+      setForm((f) => ({ ...f, photo_url: urlData.publicUrl }))
+      toast.success('Photo uploaded')
+    } catch {
+      toast.error('Failed to upload photo')
+    } finally {
+      setUploadingPhoto(false)
+      if (photoInputRef.current) photoInputRef.current.value = ''
+    }
   }
 
   async function handleSave() {
@@ -128,7 +145,7 @@ export default function AdminLeadershipPage() {
         const { error } = await supabase
           .from('district_leadership')
           .update({
-            profile_id: form.profile_id || null,
+            name: form.name || null,
             position: form.position,
             year: form.year,
             bio: form.bio || null,
@@ -143,7 +160,7 @@ export default function AdminLeadershipPage() {
         const { error } = await supabase
           .from('district_leadership')
           .insert({
-            profile_id: form.profile_id || null,
+            name: form.name || null,
             position: form.position,
             year: form.year,
             bio: form.bio || null,
@@ -175,7 +192,7 @@ export default function AdminLeadershipPage() {
     }
   }
 
-  async function toggleCurrent(leader: DistrictLeadership & { profile?: Profile }) {
+  async function toggleCurrent(leader: DistrictLeadership) {
     try {
       const { error } = await supabase
         .from('district_leadership')
@@ -247,12 +264,12 @@ export default function AdminLeadershipPage() {
                       <td className="py-3 pr-4">
                         <div className="flex items-center gap-2">
                           <Avatar className="h-7 w-7">
-                            <AvatarImage src={leader.profile?.avatar_url || leader.photo_url} />
+                            <AvatarImage src={leader.photo_url} />
                             <AvatarFallback className="text-xs">
-                              {leader.profile?.full_name?.charAt(0) || '?'}
+                              {leader.name?.charAt(0) || '?'}
                             </AvatarFallback>
                           </Avatar>
-                          <span>{leader.profile?.full_name || 'Unassigned'}</span>
+                          <span>{leader.name || '—'}</span>
                         </div>
                       </td>
                       <td className="py-3 pr-4 text-gray-600">{leader.year}</td>
@@ -299,29 +316,48 @@ export default function AdminLeadershipPage() {
             <DialogDescription>Add a district leadership position</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-navy">User</label>
-              <Select value={form.profile_id} onValueChange={(v) => setForm({ ...form, profile_id: v })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a user" />
-                </SelectTrigger>
-                <SelectContent>
-                  {profiles.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.full_name} ({p.email})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
             <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-navy">Name</label>
+                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Full name" />
+              </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-navy">Position</label>
                 <Input value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} placeholder="District Governor" />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-navy">Year</label>
-                <Input value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} placeholder="2025-2026" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-navy">Year</label>
+              <Input value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} placeholder="2025-2026" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-navy">Photo</label>
+              <div className="flex items-center gap-3">
+                {form.photo_url ? (
+                  <img src={form.photo_url} alt="Preview" className="h-16 w-16 rounded-full border object-cover" />
+                ) : (
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full border bg-gray-100 text-xs text-gray-400">
+                    No photo
+                  </div>
+                )}
+                <div className="flex flex-col gap-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => photoInputRef.current?.click()}
+                    disabled={uploadingPhoto}
+                  >
+                    {uploadingPhoto ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                    {form.photo_url ? 'Change Photo' : 'Upload Photo'}
+                  </Button>
+                  {form.photo_url && (
+                    <Button type="button" variant="ghost" size="sm" className="text-red-500" onClick={() => setForm((f) => ({ ...f, photo_url: '' }))}>
+                      Remove
+                    </Button>
+                  )}
+                </div>
+                <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
               </div>
             </div>
             <div className="space-y-2">
@@ -332,10 +368,6 @@ export default function AdminLeadershipPage() {
                 rows={3}
                 placeholder="Short biography..."
               />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-navy">Photo URL</label>
-              <Input value={form.photo_url} onChange={(e) => setForm({ ...form, photo_url: e.target.value })} placeholder="https://..." />
             </div>
             <div className="flex items-center gap-3">
               <label className="text-sm font-medium text-navy">Current</label>

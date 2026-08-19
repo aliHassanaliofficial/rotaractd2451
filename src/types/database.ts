@@ -229,14 +229,13 @@ export interface HistoryEntry {
 
 export interface DistrictLeadership {
   id: string;
-  profile_id?: string;
+  name?: string;
   position: string;
   year: string;
   is_current: boolean;
   sort_order: number;
   bio?: string;
   photo_url?: string;
-  profile?: Profile;
 }
 
 export interface ContactMessage {

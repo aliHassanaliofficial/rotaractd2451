@@ -81,24 +81,24 @@ export async function getCurrentLeadership() {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('district_leadership')
-    .select('*, profile:profile_id(*)')
+    .select('*')
     .eq('is_current', true)
     .order('sort_order', { ascending: true })
 
   if (error) throw error
-  return data as (DistrictLeadership & { profile: any })[]
+  return data as DistrictLeadership[]
 }
 
 export async function getLeadershipByYear(year: string) {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('district_leadership')
-    .select('*, profile:profile_id(*)')
+    .select('*')
     .eq('year', year)
     .order('sort_order', { ascending: true })
 
   if (error) throw error
-  return data as (DistrictLeadership & { profile: any })[]
+  return data as DistrictLeadership[]
 }
 
 export async function createLeadershipEntry(entry: Partial<DistrictLeadership>) {

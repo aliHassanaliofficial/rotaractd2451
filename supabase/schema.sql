@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS clubs (
 );
 
 DO $$ BEGIN
-  ALTER TABLE profiles ADD CONSTRAINT IF NOT EXISTS fk_club
+  ALTER TABLE profiles ADD CONSTRAINT fk_club
     FOREIGN KEY (club_id) REFERENCES clubs(id);
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
@@ -137,7 +137,7 @@ CREATE TABLE IF NOT EXISTS events (
 );
 
 DO $$ BEGIN
-  ALTER TABLE events ADD CONSTRAINT IF NOT EXISTS check_registration_type
+  ALTER TABLE events ADD CONSTRAINT check_registration_type
     CHECK (registration_type IN ('public', 'members_only'));
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
@@ -247,7 +247,7 @@ CREATE TABLE IF NOT EXISTS history_entries (
 
 CREATE TABLE IF NOT EXISTS district_leadership (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  profile_id UUID REFERENCES profiles(id),
+  name TEXT,
   position TEXT NOT NULL,
   year TEXT NOT NULL,
   is_current BOOLEAN DEFAULT TRUE,
@@ -599,6 +599,6 @@ END $$;
 DO $$ BEGIN
   DROP POLICY IF EXISTS "settings_superadmin_write" ON site_settings;
   CREATE POLICY "settings_superadmin_write" ON site_settings FOR ALL
-    USING (get_user_role() = 'superadmin');
+    USING (get_user_role() IN ('district_admin', 'superadmin'));
 EXCEPTION WHEN undefined_table THEN NULL;
 END $$;

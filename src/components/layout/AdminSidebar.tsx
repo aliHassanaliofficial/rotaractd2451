@@ -22,6 +22,7 @@ import {
   Shield,
   ClipboardCheck,
   Award,
+  Globe,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -43,6 +44,7 @@ const sidebarLinks = [
   { href: '/admin/messages', label: 'Messages', icon: MessageSquare },
   { href: '/admin/notifications', label: 'Notifications', icon: Bell },
   { href: '/admin/reports', label: 'Reports', icon: BarChart3 },
+  { href: '/admin/about', label: 'About Page', icon: Globe },
 ]
 
 export function AdminSidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
