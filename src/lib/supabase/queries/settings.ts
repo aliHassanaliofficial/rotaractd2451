@@ -27,6 +27,17 @@ export async function getSiteSettings(keys?: string[]) {
   return record
 }
 
+export async function getDistrictInfo() {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('site_settings')
+    .select('value')
+    .eq('key', 'district_info')
+    .maybeSingle()
+  if (error || !data) return null
+  return data.value as Record<string, any> | null
+}
+
 export async function updateSiteSetting(key: string, value: any, userId?: string) {
   const supabase = createClient()
   const { data, error } = await supabase

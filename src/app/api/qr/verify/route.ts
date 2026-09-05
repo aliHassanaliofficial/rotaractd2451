@@ -41,8 +41,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Ticket number mismatch' }, { status: 400 })
     }
 
+    const claimable = ['confirmed', 'attended'].includes(registration.status)
+
     return NextResponse.json({
-      valid: true,
+      valid: claimable,
+      status_note:
+        registration.status === 'pending'
+          ? 'Registration is awaiting payment approval'
+          : registration.status === 'declined'
+            ? 'Registration was declined'
+            : registration.status === 'cancelled'
+              ? 'Registration was cancelled'
+              : undefined,
       registration: {
         id: registration.id,
         ticket_number: registration.ticket_number,

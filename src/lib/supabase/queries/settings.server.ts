@@ -26,6 +26,10 @@ export async function getSiteSettingServer(key: string) {
   return data.value as any
 }
 
+export async function getDistrictInfoServer() {
+  return getSiteSettingServer('district_info') as Promise<Record<string, any> | null>
+}
+
 export async function getLeadershipYearsServer(): Promise<string[]> {
   const supabase = await createServerSupabaseClient()
   const { data } = await supabase.from('district_leadership').select('year')

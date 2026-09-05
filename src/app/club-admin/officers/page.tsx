@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRole } from '@/hooks/useRole'
 import { CLUB_OFFICER_GROUPS } from '@/lib/constants'
 import { getClubOfficers, addClubOfficer, removeClubOfficer, getClubMembers } from '@/lib/supabase/queries/clubs'
+import { getCurrentRotaryYear } from '@/lib/utils/date'
 import type { ClubOfficer, Profile } from '@/types/database'
 import { Plus, X, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -112,7 +113,7 @@ export default function ClubAdminOfficersPage() {
         club_id: selectedClubId,
         profile_id: memberId,
         position: finalPosition,
-        year: new Date().getFullYear().toString(),
+        year: getCurrentRotaryYear(),
       })
       toast.success('Officer added')
       setDialogOpen(false)

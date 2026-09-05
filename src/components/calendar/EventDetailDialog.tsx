@@ -41,7 +41,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatEventDateRange, formatDate } from '@/lib/utils/date'
-import { getCalendarTypeColors } from '@/lib/constants'
+import { getCalendarTypeColors, SITE_URL } from '@/lib/constants'
 import type { Event } from '@/types/database'
 
 export type CalendarEventItem = Event & {
@@ -105,12 +105,14 @@ export function EventDetailDialog({
   const colors = getCalendarTypeColors(event.calendar_type)
   const deadlinePassed =
     !!event.registration_deadline && new Date(event.registration_deadline) < new Date()
+  const isPaid = event.price > 0
   const canRegister =
     !!event &&
     event.status === 'published' &&
     event.registration_open &&
     siteRegOpen &&
-    !deadlinePassed
+    !deadlinePassed &&
+    !isPaid
 
   const isAdmin = mode === 'admin'
   const isClubAdmin = mode === 'club_admin'
@@ -179,7 +181,7 @@ export function EventDetailDialog({
     }
   }
 
-  const eventUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://rotaractd2451.org'}/events/${event.slug}`
+  const eventUrl = `${SITE_URL}/events/${event.slug}`
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -202,6 +204,7 @@ export function EventDetailDialog({
           <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${colors.badge}`}>
             {colors.label}
           </span>
+          {event.event_type === 'conference' && <Badge variant="cranberry" className="text-xs">Conference</Badge>}
           {event.category && <Badge variant="outline" className="text-xs">{event.category}</Badge>}
           {event.is_online && <Badge variant="info">Online</Badge>}
           {event.status !== 'published' && (
@@ -255,7 +258,7 @@ export function EventDetailDialog({
             </div>
           )}
 
-          {event.capacity && (
+          {event.capacity && event.show_capacity && (
             <div className="flex items-start gap-3">
               <Users className="mt-0.5 h-5 w-5 shrink-0 text-cranberry" />
               <div>
@@ -282,14 +285,24 @@ export function EventDetailDialog({
           </div>
         )}
 
-        {canRegister && !registered && (
+        {(canRegister || isPaid) && !registered && (
           <div className="rounded-2xl border border-cranberry/20 bg-cranberry/5 p-4">
             <div className="mb-3 flex items-center gap-2">
               <Ticket className="h-4 w-4 text-cranberry" />
               <h4 className="text-sm font-semibold text-navy">Register for this event</h4>
             </div>
 
-            {event.registration_type === 'members_only' && !user ? (
+            {isPaid ? (
+              <div className="space-y-3 py-2 text-center">
+                <p className="text-sm text-gray-500">
+                  This event has a {event.price} {event.currency} registration fee. Register on the
+                  event page to choose a payment method and upload your proof.
+                </p>
+                <Button asChild className="bg-cranberry text-white hover:bg-cranberry/90">
+                  <Link href={`/events/${event.slug}`}>Register & Pay</Link>
+                </Button>
+              </div>
+            ) : event.registration_type === 'members_only' && !user ? (
               <div className="space-y-3 py-2 text-center">
                 <p className="text-sm text-gray-500">
                   This event is for Rotaractors only. Sign in to register.

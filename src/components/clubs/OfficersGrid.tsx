@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils/cn'
+import { formatRotaryYear } from '@/lib/utils/date'
 import type { ClubOfficer } from '@/types/database'
 
 interface OfficersGridProps {
@@ -43,7 +44,7 @@ export function OfficersGrid({ officers, className, emptyMessage = 'No officers 
           </Badge>
 
           {officer.year && (
-            <p className="mt-1 text-xs text-gray-400">Term: {officer.year}</p>
+            <p className="mt-1 text-xs text-gray-400">Term: {formatRotaryYear(officer.year)}</p>
           )}
         </motion.div>
       ))}

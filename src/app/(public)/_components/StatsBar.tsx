@@ -14,7 +14,6 @@ interface Stat {
   label: string
   value: number
   icon: string
-  suffix?: string
 }
 
 interface StatsBarProps {
@@ -47,7 +46,6 @@ export function StatsBar({ stats }: StatsBarProps) {
                   className="text-3xl font-bold text-navy"
                 >
                   {isInView ? stat.value : 0}
-                  {stat.suffix}
                 </motion.span>
                 <span className="mt-1 text-sm text-gray-500">{stat.label}</span>
               </motion.div>

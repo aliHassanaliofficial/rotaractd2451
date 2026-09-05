@@ -8,6 +8,7 @@ export async function GET(request: Request) {
     const status = searchParams.get('status')
     const from = searchParams.get('from')
     const to = searchParams.get('to')
+    const type = searchParams.get('type')
     const limit = Math.min(Number(searchParams.get('limit')) || 9, 500)
     const offset = Number(searchParams.get('offset')) || 0
 
@@ -21,6 +22,7 @@ export async function GET(request: Request) {
     if (from) query = query.gte('start_at', from)
     if (to) query = query.lte('start_at', to)
     if (category) query = query.eq('category', category)
+    if (type === 'event' || type === 'conference') query = query.eq('event_type', type)
     if (status) query = query.in('status', status.split(','))
     query = query.range(offset, offset + limit - 1)
 

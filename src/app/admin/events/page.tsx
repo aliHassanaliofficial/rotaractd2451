@@ -188,6 +188,7 @@ export default function AdminEventsPage() {
               <thead>
                 <tr className="border-b bg-gray-50 text-left text-xs font-medium uppercase text-gray-500">
                   <th className="px-6 py-4">Title</th>
+                  <th className="px-6 py-4">Type</th>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4">Approval</th>
                   <th className="px-6 py-4">Date</th>
@@ -200,14 +201,14 @@ export default function AdminEventsPage() {
                 {loading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i} className="border-b">
-                      <td className="px-6 py-4" colSpan={7}>
+                      <td className="px-6 py-4" colSpan={8}>
                         <Skeleton className="h-6 w-full" />
                       </td>
                     </tr>
                   ))
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-400">
+                    <td colSpan={8} className="px-6 py-12 text-center text-gray-400">
                       No events found
                     </td>
                   </tr>
@@ -215,6 +216,13 @@ export default function AdminEventsPage() {
                   filtered.map((event) => (
                     <tr key={event.id} className="border-b transition-colors hover:bg-gray-50">
                       <td className="px-6 py-4 font-medium text-navy">{event.title}</td>
+                      <td className="px-6 py-4">
+                        {event.event_type === 'conference' ? (
+                          <Badge variant="cranberry" className="font-medium">Conference</Badge>
+                        ) : (
+                          <Badge variant="outline" className="font-medium text-gray-500">Event</Badge>
+                        )}
+                      </td>
                       <td className="px-6 py-4">
                         <Badge className={cn('font-medium', STATUS_COLORS[event.status])} variant="outline">
                           {event.status}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2, Plus, Trash2, GripVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -72,6 +73,7 @@ export default function SuperAdminSettingsPage() {
   const [regOpen, setRegOpen] = useState(true)
   const [showDirectory, setShowDirectory] = useState(true)
   const [galleryPublic, setGalleryPublic] = useState(true)
+  const [maintenanceMode, setMaintenanceMode] = useState(false)
 
   const [contactEmail, setContactEmail] = useState('')
   const [contactPhone, setContactPhone] = useState('')
@@ -115,6 +117,7 @@ export default function SuperAdminSettingsPage() {
       setRegOpen(flags.registration_open !== false)
       setShowDirectory(flags.show_member_directory !== false)
       setGalleryPublic(flags.gallery_public !== false)
+      setMaintenanceMode(flags.maintenance_mode === true)
 
       const contact = settings.contact_info || {}
       setContactEmail(contact.email || '')
@@ -266,7 +269,7 @@ export default function SuperAdminSettingsPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-navy">Year</label>
-                  <Input value={districtYear} onChange={(e) => setDistrictYear(e.target.value)} placeholder="2025-2026" />
+                  <Input value={districtYear} onChange={(e) => setDistrictYear(e.target.value)} placeholder="26/27" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-navy">District Governor</label>
@@ -427,7 +430,7 @@ export default function SuperAdminSettingsPage() {
                   checked={regOpen}
                   onCheckedChange={(v) => {
                     setRegOpen(v)
-                    saveSetting('feature_flags', { registration_open: v, show_member_directory: showDirectory, gallery_public: galleryPublic })
+                    saveSetting('feature_flags', { registration_open: v, show_member_directory: showDirectory, gallery_public: galleryPublic, maintenance_mode: maintenanceMode })
                   }}
                 />
               </div>
@@ -440,7 +443,7 @@ export default function SuperAdminSettingsPage() {
                   checked={showDirectory}
                   onCheckedChange={(v) => {
                     setShowDirectory(v)
-                    saveSetting('feature_flags', { registration_open: regOpen, show_member_directory: v, gallery_public: galleryPublic })
+                    saveSetting('feature_flags', { registration_open: regOpen, show_member_directory: v, gallery_public: galleryPublic, maintenance_mode: maintenanceMode })
                   }}
                 />
               </div>
@@ -453,9 +456,29 @@ export default function SuperAdminSettingsPage() {
                   checked={galleryPublic}
                   onCheckedChange={(v) => {
                     setGalleryPublic(v)
-                    saveSetting('feature_flags', { registration_open: regOpen, show_member_directory: showDirectory, gallery_public: v })
+                    saveSetting('feature_flags', { registration_open: regOpen, show_member_directory: showDirectory, gallery_public: v, maintenance_mode: maintenanceMode })
                   }}
                 />
+              </div>
+              <div className="flex items-center justify-between rounded-2xl border p-4">
+                <div>
+                  <p className="font-medium text-navy">Doing Some Updates</p>
+                  <p className="text-sm text-gray-500">
+                    Show the &quot;Doing Some Updates&quot; page to all visitors. Superadmins can still browse the site normally.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/doing-some-updates">Preview</Link>
+                  </Button>
+                  <Switch
+                    checked={maintenanceMode}
+                    onCheckedChange={(v) => {
+                      setMaintenanceMode(v)
+                      saveSetting('feature_flags', { registration_open: regOpen, show_member_directory: showDirectory, gallery_public: galleryPublic, maintenance_mode: v })
+                    }}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>

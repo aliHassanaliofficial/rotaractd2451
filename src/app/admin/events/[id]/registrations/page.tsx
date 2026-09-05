@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { getRegistrationsByEvent, updateRegistrationStatus } from '@/lib/supabase/queries/registrations'
+import { getRegistrationsByEvent } from '@/lib/supabase/queries/registrations'
 import { getEventById } from '@/lib/supabase/queries/events'
 import { formatDate, formatDateTime } from '@/lib/utils/date'
 import { cn } from '@/lib/utils/cn'
@@ -79,11 +79,17 @@ export default function EventRegistrationsPage() {
   async function handleStatusChange(regId: string, status: Registration['status']) {
     setUpdating(regId)
     try {
-      await updateRegistrationStatus(regId, status)
+      const res = await fetch(`/api/registrations/${regId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Failed to update status')
       setRegistrations((prev) => prev.map((r) => (r.id === regId ? { ...r, status } : r)))
-      toast.success(`Registration ${status}`)
-    } catch {
-      toast.error('Failed to update status')
+      toast.success(`Registration ${REG_STATUS_LABELS[status] || status}`)
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update status')
     } finally {
       setUpdating(null)
     }
@@ -93,13 +99,21 @@ export default function EventRegistrationsPage() {
     setUpdating('bulk')
     try {
       for (const regId of selectedIds) {
-        await updateRegistrationStatus(regId, 'confirmed')
+        const res = await fetch(`/api/registrations/${regId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'confirmed' }),
+        })
+        if (!res.ok) {
+          const result = await res.json()
+          throw new Error(result.error || 'Failed to confirm')
+        }
       }
       setRegistrations((prev) => prev.map((r) => (selectedIds.has(r.id) ? { ...r, status: 'confirmed' } : r)))
       toast.success(`${selectedIds.size} registrations confirmed`)
       setSelectedIds(new Set())
-    } catch {
-      toast.error('Failed to bulk confirm')
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to bulk confirm')
     } finally {
       setUpdating(null)
     }
@@ -194,6 +208,7 @@ export default function EventRegistrationsPage() {
             <SelectItem value="pending">Pending</SelectItem>
             <SelectItem value="confirmed">Confirmed</SelectItem>
             <SelectItem value="attended">Attended</SelectItem>
+            <SelectItem value="declined">Declined</SelectItem>
             <SelectItem value="cancelled">Cancelled</SelectItem>
           </SelectContent>
         </Select>
@@ -212,6 +227,7 @@ export default function EventRegistrationsPage() {
                   <th className="px-4 py-4">Email</th>
                   <th className="px-4 py-4">Phone</th>
                   <th className="px-4 py-4">Club</th>
+                  <th className="px-4 py-4">Payment</th>
                   <th className="px-4 py-4">Status</th>
                   <th className="px-4 py-4">Ticket</th>
                   <th className="px-4 py-4">Registered At</th>
@@ -221,7 +237,7 @@ export default function EventRegistrationsPage() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-12 text-center text-gray-400">No registrations found</td>
+                    <td colSpan={10} className="px-6 py-12 text-center text-gray-400">No registrations found</td>
                   </tr>
                 ) : (
                   filtered.map((reg) => (
@@ -236,6 +252,20 @@ export default function EventRegistrationsPage() {
                       <td className="px-4 py-3 text-gray-600">{reg.profile?.phone || reg.guest_phone || '-'}</td>
                       <td className="px-4 py-3 text-gray-600">{reg.profile?.club?.name || reg.guest_club || '-'}</td>
                       <td className="px-4 py-3">
+                        {reg.transaction_method ? (
+                          <div className="text-xs">
+                            <p className="font-medium text-navy">{reg.transaction_method.name}</p>
+                            {reg.transaction_proof_url && (
+                              <a href={reg.transaction_proof_url} target="_blank" rel="noopener noreferrer" className="text-cranberry hover:underline">
+                                View proof
+                              </a>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-300">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
                         <Badge className={cn('font-medium', REG_STATUS_COLORS[reg.status])} variant="outline">
                           {REG_STATUS_LABELS[reg.status] || reg.status}
                         </Badge>
@@ -246,10 +276,10 @@ export default function EventRegistrationsPage() {
                         <div className="flex items-center justify-end gap-1">
                           {reg.status === 'pending' && (
                             <>
-                              <Button variant="ghost" size="icon" className="text-green-600" onClick={() => handleStatusChange(reg.id, 'confirmed')} disabled={updating === reg.id}>
+                              <Button variant="ghost" size="icon" className="text-green-600" onClick={() => handleStatusChange(reg.id, 'confirmed')} disabled={updating === reg.id} title="Approve">
                                 {updating === reg.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                               </Button>
-                              <Button variant="ghost" size="icon" className="text-red-500" onClick={() => handleStatusChange(reg.id, 'cancelled')} disabled={updating === reg.id}>
+                              <Button variant="ghost" size="icon" className="text-red-500" onClick={() => handleStatusChange(reg.id, 'declined')} disabled={updating === reg.id} title="Decline">
                                 <X className="h-4 w-4" />
                               </Button>
                             </>

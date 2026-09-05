@@ -6,7 +6,8 @@ import { getClubBySlug } from '@/lib/supabase/queries/clubs.server'
 import { getClubOfficers, getClubMembers } from '@/lib/supabase/queries/clubs'
 import { getEventsByHostClub } from '@/lib/supabase/queries/events'
 import { getPublishedAlbums } from '@/lib/supabase/queries/gallery'
-import { formatDate, formatEventDateRange } from '@/lib/utils/date'
+import { SITE_URL } from '@/lib/constants'
+import { formatDate, formatEventDateRange, formatRotaryYear } from '@/lib/utils/date'
 import { cn } from '@/lib/utils/cn'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -24,9 +25,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const { slug } = await params
     const club = await getClubBySlug(slug)
+    const description =
+      club.description || `Rotaract club at ${club.university || club.city}`
     return {
       title: club.name,
-      description: club.description || `Rotaract club at ${club.university || club.city}`,
+      description,
+      alternates: { canonical: `${SITE_URL}/clubs/${slug}` },
+      openGraph: {
+        title: club.name,
+        description,
+        type: 'profile',
+        url: `${SITE_URL}/clubs/${slug}`,
+        images: club.logo_url ? [{ url: club.logo_url }] : undefined,
+      },
     }
   } catch {
     return { title: 'Club Not Found' }
@@ -296,7 +307,7 @@ export default async function ClubDetailPage({ params }: Props) {
                         </Avatar>
                         <h3 className="font-semibold text-navy">{officer.profile?.full_name || 'Unknown'}</h3>
                         <Badge variant="cranberry" className="mt-2">{officer.position}</Badge>
-                        <p className="mt-2 text-xs text-gray-400">{officer.year}</p>
+                        <p className="mt-2 text-xs text-gray-400">{formatRotaryYear(officer.year)}</p>
                       </CardContent>
                     </Card>
                   ))}

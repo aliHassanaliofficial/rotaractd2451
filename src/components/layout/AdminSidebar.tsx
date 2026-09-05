@@ -23,6 +23,7 @@ import {
   ClipboardCheck,
   Award,
   Globe,
+  Wallet,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -33,6 +34,7 @@ const sidebarLinks = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/pending', label: 'Pending Approvals', icon: ClipboardCheck },
   { href: '/admin/events', label: 'Events', icon: Calendar },
+  { href: '/admin/transactions', label: 'Transactions', icon: Wallet },
   { href: '/admin/calendar', label: 'Calendar', icon: Calendar },
   { href: '/admin/posts', label: 'Posts', icon: FileText },
   { href: '/admin/announcements', label: 'Announcements', icon: Megaphone },

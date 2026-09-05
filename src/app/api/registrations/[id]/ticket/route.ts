@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { generateTicketPDF } from '@/lib/utils/pdf'
+import { getDistrictInfoServer } from '@/lib/supabase/queries/settings.server'
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -31,7 +32,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       }
     }
 
-    const pdfBlob = await generateTicketPDF(registration, registration.event)
+    const districtInfo = (await getDistrictInfoServer()) || {}
+    const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'https://rotaract2451.org'
+    const pdfBlob = await generateTicketPDF(registration, registration.event, {
+      districtName: (districtInfo.name as string) || 'Rotaract District 2451',
+      logoUrl: '/logo-white.png',
+      siteUrl: origin,
+    })
 
     const filename = `ticket-${registration.ticket_number || 'unknown'}.pdf`
 

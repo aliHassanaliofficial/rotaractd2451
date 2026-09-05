@@ -66,7 +66,7 @@ export default function EditEventPage() {
     formState: { errors },
   } = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
-    defaultValues: { status: 'draft', price: 0, currency: 'EGP', is_online: false, registration_open: true, registration_type: 'public' },
+    defaultValues: { status: 'draft', price: 0, currency: 'EGP', is_online: false, registration_open: true, registration_type: 'public', event_type: 'event', show_capacity: true },
   })
 
   const watchTitle = watch('title')
@@ -103,6 +103,8 @@ export default function EditEventPage() {
         host_club_id: event.host_club_id,
         category: event.category,
         calendar_type: event.calendar_type || 'event',
+        event_type: event.event_type || 'event',
+        show_capacity: event.show_capacity !== false,
         tags: event.tags || [],
       })
       setLoading(false)
@@ -303,6 +305,18 @@ export default function EditEventPage() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
+                <Label>Event Type</Label>
+                <Select defaultValue={watch('event_type') || 'event'} onValueChange={(v: 'event' | 'conference') => setValue('event_type', v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="event">Regular Event</SelectItem>
+                    <SelectItem value="conference">Conference</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="capacity">Capacity</Label>
                 <Input id="capacity" type="number" {...register('capacity', { valueAsNumber: true })} />
               </div>
@@ -389,6 +403,10 @@ export default function EditEventPage() {
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" {...register('registration_open')} className="rounded border-gray-300" />
                 Registration Open
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" {...register('show_capacity')} className="rounded border-gray-300" />
+                Show Capacity on Public Page
               </label>
             </div>
 

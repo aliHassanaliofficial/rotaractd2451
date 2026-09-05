@@ -83,10 +83,10 @@ export default async function HomePage() {
   const aboutStats = (settings?.about_page as { stats?: { label: string; value: string; icon?: string }[] } | undefined)?.stats
 
   const stats = [
-    { label: aboutStats?.[0]?.label || 'Active Clubs', value: parseInt(aboutStats?.[0]?.value || '0') || clubs.length, icon: aboutStats?.[0]?.icon || 'users', suffix: '+' },
-    { label: aboutStats?.[1]?.label || 'Members', value: parseInt(aboutStats?.[1]?.value || '0'), icon: aboutStats?.[1]?.icon || 'users', suffix: '+' },
-    { label: aboutStats?.[2]?.label || 'Events This Year', value: parseInt(aboutStats?.[2]?.value || '0'), icon: aboutStats?.[2]?.icon || 'calendar', suffix: '+' },
-    { label: aboutStats?.[3]?.label || 'Years of Service', value: parseInt(aboutStats?.[3]?.value || '0'), icon: aboutStats?.[3]?.icon || 'clock', suffix: '+' },
+    { label: aboutStats?.[0]?.label || 'Active Clubs', value: parseInt(aboutStats?.[0]?.value || '0') || clubs.length, icon: aboutStats?.[0]?.icon || 'users' },
+    { label: aboutStats?.[1]?.label || 'Members', value: parseInt(aboutStats?.[1]?.value || '0'), icon: aboutStats?.[1]?.icon || 'users' },
+    { label: aboutStats?.[2]?.label || 'Events This Year', value: parseInt(aboutStats?.[2]?.value || '0'), icon: aboutStats?.[2]?.icon || 'calendar' },
+    { label: aboutStats?.[3]?.label || 'Years of Service', value: parseInt(aboutStats?.[3]?.value || '0'), icon: aboutStats?.[3]?.icon || 'clock' },
   ]
 
   return (

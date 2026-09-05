@@ -21,8 +21,10 @@ const ALLOWED_MIME_TYPES = [
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024
+const MAX_PROOF_SIZE = 5 * 1024 * 1024
 
 const ALLOWED_BUCKETS = Object.values(STORAGE_BUCKETS)
+const ANONYMOUS_BUCKETS = [STORAGE_BUCKETS.AVATARS, STORAGE_BUCKETS.REGISTRATION_PROOFS]
 
 // Uploads are normally restricted to signed-in users. Avatars are uploaded
 // from the registration form before the account exists, so allow anonymous
@@ -56,7 +58,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid storage bucket' }, { status: 400 })
     }
 
-    const isAnonymous = bucketName === STORAGE_BUCKETS.AVATARS
+    const isAnonymous = ANONYMOUS_BUCKETS.includes(bucketName as any)
 
     if (isAnonymous) {
       if (!allowAnonymousUpload(ip)) {
@@ -77,8 +79,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
-    if (isAnonymous && file.size > MAX_AVATAR_SIZE) {
+    if (bucketName === STORAGE_BUCKETS.AVATARS && file.size > MAX_AVATAR_SIZE) {
       return NextResponse.json({ error: 'Image must be under 2MB' }, { status: 400 })
+    }
+
+    if (bucketName === STORAGE_BUCKETS.REGISTRATION_PROOFS && file.size > MAX_PROOF_SIZE) {
+      return NextResponse.json({ error: 'Proof image must be under 5MB' }, { status: 400 })
     }
 
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {

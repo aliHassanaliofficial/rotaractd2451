@@ -27,12 +27,14 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { toast } from 'sonner'
+import { getCurrentRotaryYear, formatRotaryYear } from '@/lib/utils/date'
 import type { DistrictLeadership } from '@/types/database'
 
 export default function AdminLeadershipPage() {
   const [leaders, setLeaders] = useState<DistrictLeadership[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedYear, setSelectedYear] = useState('')
+  const [years, setYears] = useState<string[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingLeader, setEditingLeader] = useState<DistrictLeadership | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -44,7 +46,7 @@ export default function AdminLeadershipPage() {
   const [form, setForm] = useState({
     name: '',
     position: '',
-    year: new Date().getFullYear().toString(),
+    year: getCurrentRotaryYear(),
     bio: '',
     photo_url: '',
     is_current: true,
@@ -62,9 +64,10 @@ export default function AdminLeadershipPage() {
 
   async function loadYears() {
     const { data } = await supabase.from('district_leadership').select('year')
-    const years = [...new Set((data || []).map((r: { year: string }) => r.year))].sort().reverse()
-    if (years.length > 0) setSelectedYear(years[0])
-    else setSelectedYear(new Date().getFullYear().toString())
+    const distinct = [...new Set((data || []).map((r: { year: string }) => r.year))].sort().reverse()
+    setYears(distinct)
+    if (distinct.length > 0) setSelectedYear(distinct[0])
+    else setSelectedYear(getCurrentRotaryYear())
   }
 
   async function loadLeaders() {
@@ -225,9 +228,12 @@ export default function AdminLeadershipPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString()).map((y) => (
-                <SelectItem key={y} value={y}>{y}</SelectItem>
+              {years.map((y) => (
+                <SelectItem key={y} value={y}>{formatRotaryYear(y)}</SelectItem>
               ))}
+              {selectedYear && !years.includes(selectedYear) && (
+                <SelectItem key={selectedYear} value={selectedYear}>{formatRotaryYear(selectedYear)}</SelectItem>
+              )}
             </SelectContent>
           </Select>
           <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Add Entry</Button>
@@ -236,7 +242,7 @@ export default function AdminLeadershipPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-navy">Leadership for {selectedYear}</CardTitle>
+          <CardTitle className="text-navy">Leadership for {formatRotaryYear(selectedYear)}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -254,7 +260,7 @@ export default function AdminLeadershipPage() {
                 {leaders.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-8 text-center text-gray-400">
-                      No leadership entries for {selectedYear}
+                      No leadership entries for {formatRotaryYear(selectedYear)}
                     </td>
                   </tr>
                 ) : (
@@ -272,7 +278,7 @@ export default function AdminLeadershipPage() {
                           <span>{leader.name || '—'}</span>
                         </div>
                       </td>
-                      <td className="py-3 pr-4 text-gray-600">{leader.year}</td>
+                      <td className="py-3 pr-4 text-gray-600">{formatRotaryYear(leader.year)}</td>
                       <td className="py-3 pr-4">
                         {leader.is_current ? (
                           <Badge className="bg-green-100 text-green-700" variant="outline">Current</Badge>
@@ -328,7 +334,7 @@ export default function AdminLeadershipPage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-navy">Year</label>
-              <Input value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} placeholder="2025-2026" />
+              <Input value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} placeholder="26/27" />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-navy">Photo</label>

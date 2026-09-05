@@ -1,8 +1,16 @@
+import type { Metadata } from 'next'
 import { getHistoryEntries } from '@/lib/supabase/queries/settings'
 import { MILESTONE_TYPES } from '@/lib/constants'
 import { formatDate } from '@/lib/utils/date'
 import { cn } from '@/lib/utils/cn'
 import { TimelineClient } from './TimelineClient'
+
+export const metadata: Metadata = {
+  title: 'Our History',
+  description:
+    'Explore the history of Rotaract District 2451 Egypt — milestones, achievements, and the journey of young leaders creating change since our founding.',
+  alternates: { canonical: '/history' },
+}
 
 export default async function HistoryPage() {
   const entries = await getHistoryEntries().catch(() => [])

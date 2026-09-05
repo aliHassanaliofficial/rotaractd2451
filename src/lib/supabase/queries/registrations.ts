@@ -5,7 +5,7 @@ export async function getRegistrationsByEvent(eventId: string) {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('registrations')
-    .select('*, profile:profile_id(*)')
+    .select('*, profile:profile_id(*, club:club_id(*)), transaction_method:transaction_method_id(*)')
     .eq('event_id', eventId)
     .order('registered_at', { ascending: false })
 
@@ -48,6 +48,15 @@ export async function updateRegistrationStatus(id: string, status: Registration[
 
 export async function checkInAttendee(id: string, checkedInBy: string) {
   const supabase = createClient()
+  const { data: existing } = await supabase
+    .from('registrations')
+    .select('id, status')
+    .eq('id', id)
+    .eq('status', 'confirmed')
+    .maybeSingle()
+
+  if (!existing) return null
+
   const { data, error } = await supabase
     .from('registrations')
     .update({
@@ -79,7 +88,7 @@ export async function getRegistrationById(id: string) {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('registrations')
-    .select('*, event:event_id(*), profile:profile_id(*, club:club_id(*))')
+    .select('*, event:event_id(*), profile:profile_id(*, club:club_id(*)), transaction_method:transaction_method_id(*)')
     .eq('id', id)
     .single()
 
@@ -91,12 +100,12 @@ export async function getUserRegistrations(userId: string) {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('registrations')
-    .select('*, event:event_id(*)')
+    .select('*, event:event_id(*), profile:profile_id(*, club:club_id(*)), transaction_method:transaction_method_id(*)')
     .eq('profile_id', userId)
     .order('registered_at', { ascending: false })
 
   if (error) throw error
-  return data as (Registration & { event: any })[]
+  return data as (Registration & { event: any; profile: any })[]
 }
 
 export async function getRegistrationCount(eventId: string) {
@@ -105,7 +114,7 @@ export async function getRegistrationCount(eventId: string) {
     .from('registrations')
     .select('*', { count: 'exact', head: true })
     .eq('event_id', eventId)
-    .in('status', ['confirmed', 'attended'])
+    .in('status', ['confirmed', 'attended', 'pending'])
 
   if (error) throw error
   return count || 0

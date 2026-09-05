@@ -78,9 +78,9 @@ async function seed() {
 
   const events = [
     {
-      title: 'District Installation Ceremony 2026-2027',
+      title: 'District Installation Ceremony 26/27',
       slug: 'district-installation-2026',
-      description: 'Join us for the official installation of the new district leadership team for the Rotary year 2026-2027.',
+      description: 'Join us for the official installation of the new district leadership team for RY 26/27.',
       start_at: nextWeek.toISOString(),
       end_at: new Date(nextWeek.getTime() + 4 * 60 * 60 * 1000).toISOString(),
       location: 'Cairo Marriott Hotel',
@@ -138,7 +138,7 @@ async function seed() {
 
   // 4. Create sample posts
   const posts = [
-    { title: 'Welcome to the New Rotary Year 2026-2027', excerpt: 'A message from the District Governor about our vision for the upcoming year.', tags: ['district', 'welcome'], is_announcement: true, is_pinned: true, announcement_priority: 'important' },
+    { title: 'Welcome to RY 26/27', excerpt: 'A message from the District Governor about our vision for the upcoming year.', tags: ['district', 'welcome'], is_announcement: true, is_pinned: true, announcement_priority: 'important' },
     { title: 'Highlights from the District Assembly', excerpt: 'Key takeaways and photos from our successful District Assembly event.', tags: ['district', 'event'], is_announcement: false, is_pinned: false },
     { title: 'Membership Growth Tips for Clubs', excerpt: 'Practical strategies to grow your Rotaract club membership.', tags: ['membership', 'growth'], is_announcement: false, is_pinned: false },
     { title: 'Upcoming Training Opportunities', excerpt: 'Mark your calendars for these upcoming training sessions.', tags: ['training', 'opportunities'], is_announcement: true, announcement_priority: 'normal' },
@@ -200,7 +200,7 @@ async function seed() {
   const settings = {
     district_info: {
       name: 'Rotaract District 2451',
-      year: '2026-2027',
+      year: '26/27',
       governor: 'District Governor',
       theme: 'Empowering Young Leaders',
       logo_url: '',
@@ -220,6 +220,7 @@ async function seed() {
       guest_registration: true,
       show_member_directory: true,
       gallery_public: true,
+      maintenance_mode: false,
     },
   }
 

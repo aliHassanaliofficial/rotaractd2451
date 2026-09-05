@@ -59,6 +59,8 @@ export default function NewEventPage() {
       registration_open: true,
       registration_type: 'public',
       calendar_type: 'event',
+      event_type: 'event',
+      show_capacity: true,
     },
   })
 
@@ -227,6 +229,18 @@ export default function NewEventPage() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
+                <Label>Event Type</Label>
+                <Select defaultValue="event" onValueChange={(v: 'event' | 'conference') => setValue('event_type', v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="event">Regular Event</SelectItem>
+                    <SelectItem value="conference">Conference</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="capacity">Capacity</Label>
                 <Input id="capacity" type="number" {...register('capacity', { valueAsNumber: true })} placeholder="Max attendees" />
               </div>
@@ -311,6 +325,10 @@ export default function NewEventPage() {
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" {...register('registration_open')} className="rounded border-gray-300" />
                 Registration Open
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" {...register('show_capacity')} className="rounded border-gray-300" />
+                Show Capacity on Public Page
               </label>
             </div>
 

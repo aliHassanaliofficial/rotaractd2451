@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useUser } from '@/hooks/useUser'
 import { getUserRegistrations } from '@/lib/supabase/queries/registrations'
+import { getDistrictInfo } from '@/lib/supabase/queries/settings'
 import { generateTicketPDF } from '@/lib/utils/pdf'
 import { formatDateTime } from '@/lib/utils/date'
 import { REG_STATUS_LABELS, REG_STATUS_COLORS } from '@/lib/constants'
@@ -59,7 +60,12 @@ export default function MyTicketsPage() {
   const handleDownload = async (reg: Registration & { event: any }) => {
     setDownloading(reg.id)
     try {
-      const blob = await generateTicketPDF(reg, reg.event)
+      const districtInfo = (await getDistrictInfo()) || {}
+      const blob = await generateTicketPDF(reg, reg.event, {
+        districtName: (districtInfo.name as string) || 'Rotaract District 2451',
+        logoUrl: '/logo-white.png',
+        siteUrl: window.location.origin,
+      })
       const url = URL.createObjectURL(blob)
       const a = window.document.createElement('a')
       a.href = url
@@ -198,6 +204,11 @@ export default function MyTicketsPage() {
                                 ? formatDateTime(reg.event.start_at)
                                 : ''}
                             </p>
+                            {(reg.profile?.full_name || reg.guest_name) && (
+                              <p className="mt-1 text-sm font-medium text-gray-800">
+                                {reg.profile?.full_name || reg.guest_name}
+                              </p>
+                            )}
                           </div>
                           <Badge
                             className={
@@ -226,22 +237,30 @@ export default function MyTicketsPage() {
                           )}
                         </div>
 
-                        {reg.status !== 'cancelled' && (
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDownload(reg)}
-                              disabled={downloading === reg.id}
-                            >
-                              {downloading === reg.id ? (
-                                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <Download className="mr-1 h-3.5 w-3.5" />
-                              )}
-                              Download PDF
-                            </Button>
-                            <Dialog
+                        {reg.status !== 'cancelled' && reg.status !== 'declined' && (
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            {reg.status === 'pending' && (
+                              <p className="w-full text-xs text-yellow-700">
+                                Awaiting payment approval. Your ticket will be available here once confirmed.
+                              </p>
+                            )}
+                            {reg.status === 'confirmed' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDownload(reg)}
+                                disabled={downloading === reg.id}
+                              >
+                                {downloading === reg.id ? (
+                                  <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <Download className="mr-1 h-3.5 w-3.5" />
+                                )}
+                                Download PDF
+                              </Button>
+                            )}
+                            {['confirmed', 'pending'].includes(reg.status) && (
+                              <Dialog
                               open={cancelDialog === reg.id}
                               onOpenChange={(open) =>
                                 setCancelDialog(open ? reg.id : null)
@@ -290,7 +309,14 @@ export default function MyTicketsPage() {
                                 </DialogFooter>
                               </DialogContent>
                             </Dialog>
+                            )}
                           </div>
+                        )}
+
+                        {reg.status === 'declined' && (
+                          <p className="mt-3 text-xs text-red-600">
+                            This registration was declined. If you believe this is an error, contact the registration team.
+                          </p>
                         )}
 
                         {reg.event && reg.status !== 'cancelled' && (

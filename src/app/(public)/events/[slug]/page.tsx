@@ -21,6 +21,8 @@ import { cn } from '@/lib/utils/cn'
 import { Calendar, MapPin, Clock, Users, Ticket, DollarSign, Globe, Loader2, CheckCircle, Share2, LinkIcon, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSiteSettings } from '@/hooks/useSiteSettings'
+import { SITE_URL } from '@/lib/constants'
+import PaymentSection, { type SelectedPayment } from '@/components/events/PaymentSection'
 import type { Event } from '@/types/database'
 
 const guestSchema = z.object({
@@ -42,10 +44,12 @@ export default function EventDetailPage({ params }: Props) {
   const { user, loading: authLoading } = useAuth()
   const { settings } = useSiteSettings()
   const siteRegOpen = settings.feature_flags?.registration_open !== false
-  const [event, setEvent] = useState<(Event & { host_club: any; organizer: any }) | null>(null)
+  const [event, setEvent] = useState<(Event & { host_club: any; organizer: any; registered_count?: number }) | null>(null)
   const [loading, setLoading] = useState(true)
   const [registering, setRegistering] = useState(false)
   const [registered, setRegistered] = useState(false)
+  const [pendingApproval, setPendingApproval] = useState(false)
+  const [payment, setPayment] = useState<SelectedPayment | null>(null)
   const [registrationType, setRegistrationType] = useState<'guest' | 'member'>('guest')
   const [showAgenda, setShowAgenda] = useState<string[]>([])
 
@@ -71,18 +75,28 @@ export default function EventDetailPage({ params }: Props) {
 
   const onSubmit = async (data: GuestForm) => {
     if (!event) return
+    if (needsPayment && !payment) {
+      toast.error('Please complete the payment method and proof fields first.')
+      return
+    }
     setRegistering(true)
     try {
       const res = await fetch('/api/registrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event_id: event.id, ...data }),
+        body: JSON.stringify({
+          event_id: event.id,
+          ...data,
+          ...(needsPayment ? { transaction_method_id: payment?.methodId, transaction_proof_url: payment?.proofUrl } : {}),
+        }),
       })
       const result = await res.json()
       if (!res.ok) throw new Error(result.error || 'Registration failed')
       setRegistered(true)
+      setPendingApproval(result.status === 'pending')
+      setPayment(null)
       reset()
-      toast.success('Successfully registered!')
+      toast.success(result.status === 'pending' ? 'Registration received! Awaiting payment approval.' : 'Successfully registered!')
     } catch (err: any) {
       toast.error(err?.message || 'Registration failed. Please try again.')
       console.error('Guest registration error:', err)
@@ -93,17 +107,26 @@ export default function EventDetailPage({ params }: Props) {
 
   const handleMemberRegister = async () => {
     if (!event) return
+    if (needsPayment && !payment) {
+      toast.error('Please complete the payment method and proof fields first.')
+      return
+    }
     setRegistering(true)
     try {
       const res = await fetch('/api/registrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event_id: event.id }),
+        body: JSON.stringify({
+          event_id: event.id,
+          ...(needsPayment ? { transaction_method_id: payment?.methodId, transaction_proof_url: payment?.proofUrl } : {}),
+        }),
       })
       const result = await res.json()
       if (!res.ok) throw new Error(result.error || 'Registration failed')
       setRegistered(true)
-      toast.success('Successfully registered!')
+      setPendingApproval(result.status === 'pending')
+      setPayment(null)
+      toast.success(result.status === 'pending' ? 'Registration received! Awaiting payment approval.' : 'Successfully registered!')
     } catch (err: any) {
       toast.error(err?.message || 'Registration failed. Please try again.')
     } finally {
@@ -121,9 +144,22 @@ export default function EventDetailPage({ params }: Props) {
 
   if (!event) return notFound()
 
+  const needsPayment = event.price > 0
   const countdown = daysUntil(event.start_at)
-  const capacityPercent = event.capacity ? Math.min(100, Math.round((event.registration_open ? 60 : 100) / (event.capacity || 1) * 100)) : 0
-  const eventUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://rotaractd2451.org'}/events/${slug}`
+  const registeredCount = event?.registered_count || 0
+  const capacityPercent = event.capacity ? Math.min(100, Math.round(registeredCount / (event.capacity || 1) * 100)) : 0
+  const eventUrl = `${SITE_URL}/events/${slug}`
+
+  function renderDescription(text: string) {
+    const urlRegex = /(https?:\/\/[^\s<]+)/g
+    const parts = text.split(urlRegex)
+    return parts.map((part, i) => {
+      if (urlRegex.test(part)) {
+        return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-cranberry underline underline-offset-2 hover:text-navy">{part}</a>
+      }
+      return part
+    })
+  }
 
   return (
     <div className="flex flex-col">
@@ -137,6 +173,7 @@ export default function EventDetailPage({ params }: Props) {
         <div className="absolute bottom-0 left-0 right-0 p-8">
           <div className="container mx-auto">
             <div className="mb-3 flex flex-wrap items-center gap-2">
+              {event.event_type === 'conference' && <Badge variant="cranberry">Conference</Badge>}
               {event.category && <Badge variant="secondary">{event.category}</Badge>}
               {event.is_online && <Badge variant="info">Online</Badge>}
               <Badge variant={countdown > 7 ? 'success' : countdown > 0 ? 'warning' : 'destructive'}>
@@ -156,7 +193,7 @@ export default function EventDetailPage({ params }: Props) {
               {event.description && (
                 <div>
                   <h2 className="mb-4 text-2xl font-bold text-navy">About This Event</h2>
-                  <p className="leading-relaxed text-gray-600 whitespace-pre-line">{event.description}</p>
+                  <p className="leading-relaxed text-gray-600 whitespace-pre-line">{renderDescription(event.description)}</p>
                 </div>
               )}
 
@@ -224,6 +261,11 @@ export default function EventDetailPage({ params }: Props) {
                         <p className="text-sm text-gray-500">
                           Register using your Rotaract account.
                         </p>
+                        {needsPayment && (
+                          <div className="rounded-2xl border bg-white p-4 text-left">
+                            <PaymentSection price={event.price} currency={event.currency} onChange={setPayment} />
+                          </div>
+                        )}
                         <Button
                           className="bg-gradient-to-r from-navy to-rotary-blue text-white hover:brightness-110"
                           onClick={handleMemberRegister}
@@ -271,6 +313,11 @@ export default function EventDetailPage({ params }: Props) {
                               <label className="mb-1 block text-sm font-medium text-gray-700">Notes</label>
                               <Textarea {...register('notes')} placeholder="Any special requirements?" />
                             </div>
+                            {needsPayment && (
+                              <div className="rounded-2xl border bg-white p-4">
+                                <PaymentSection price={event.price} currency={event.currency} onChange={setPayment} />
+                              </div>
+                            )}
                             <Button type="submit" className="bg-cranberry text-white hover:bg-cranberry/90" disabled={isSubmitting || registering}>
                               {isSubmitting || registering ? (
                                 <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Registering...</>
@@ -286,6 +333,11 @@ export default function EventDetailPage({ params }: Props) {
                             <p className="text-sm text-gray-500">
                               Register using your Rotaract account.
                             </p>
+                            {needsPayment && (
+                              <div className="rounded-2xl border bg-white p-4 text-left">
+                                <PaymentSection price={event.price} currency={event.currency} onChange={setPayment} />
+                              </div>
+                            )}
                             <Button
                               className="bg-gradient-to-r from-navy to-rotary-blue text-white hover:brightness-110"
                               onClick={handleMemberRegister}
@@ -314,9 +366,20 @@ export default function EventDetailPage({ params }: Props) {
                   <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
                     <CheckCircle className="h-8 w-8 text-green-600" />
                   </div>
-                  <h3 className="mb-2 text-xl font-semibold text-navy">You&apos;re Registered!</h3>
-                  <p className="mb-6 text-gray-500">Check your email for the confirmation and ticket.</p>
-                  <Button variant="outline" onClick={() => setRegistered(false)}>Register Another Person</Button>
+                  {pendingApproval ? (
+                    <>
+                      <h3 className="mb-2 text-xl font-semibold text-navy">Registration Received!</h3>
+                      <p className="mb-6 max-w-md text-gray-500">
+                        Your payment is being reviewed by our team. You will receive your confirmation and e-ticket by email once it is approved.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="mb-2 text-xl font-semibold text-navy">You&apos;re Registered!</h3>
+                      <p className="mb-6 text-gray-500">Check your email for the confirmation and ticket.</p>
+                    </>
+                  )}
+                  <Button variant="outline" onClick={() => { setRegistered(false); setPendingApproval(false) }}>Register Another Person</Button>
                 </motion.div>
               )}
             </div>
@@ -386,25 +449,28 @@ export default function EventDetailPage({ params }: Props) {
                 </CardContent>
               </Card>
 
-              {event.capacity && (
+              {event.capacity && event.show_capacity && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-navy">Capacity</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="mb-2 flex items-center justify-between text-sm">
-                      <span className="text-gray-500">{capacityPercent}% full</span>
-                      <span className="font-medium text-navy">{event.capacity} spots</span>
+                      <span className="text-gray-500">{registeredCount} / {event.capacity} registered</span>
+                      <span className="font-medium text-navy">{event.capacity - registeredCount > 0 ? event.capacity - registeredCount : 0} spots left</span>
                     </div>
                     <div className="h-2 overflow-hidden rounded-full bg-gray-200">
                       <div
                         className={cn(
                           'h-full rounded-full transition-all duration-500',
-                          capacityPercent > 80 ? 'bg-cranberry' : capacityPercent > 50 ? 'bg-gold' : 'bg-green-500'
+                          capacityPercent >= 100 ? 'bg-red-500' : capacityPercent > 80 ? 'bg-cranberry' : capacityPercent > 50 ? 'bg-gold' : 'bg-green-500'
                         )}
                         style={{ width: `${capacityPercent}%` }}
                       />
                     </div>
+                    {capacityPercent >= 100 && (
+                      <p className="mt-2 text-sm font-medium text-red-500">Sold Out</p>
+                    )}
                   </CardContent>
                 </Card>
               )}

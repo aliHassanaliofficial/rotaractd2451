@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     })
 
     try {
-      const districtEmail = (await getSiteSetting('district_email'))?.value || process.env.DISTRICT_EMAIL || 'info@rotaractd2451.org'
+      const districtEmail = (await getSiteSetting('district_email'))?.value || process.env.DISTRICT_EMAIL || 'info@rotaract2451.org'
 
       await sendEmail({
         to: districtEmail,

@@ -4,6 +4,7 @@ import Image from 'next/image'
 import type { Metadata } from 'next'
 import { getPostBySlug } from '@/lib/supabase/queries/posts.server'
 import { getPublishedPosts } from '@/lib/supabase/queries/posts'
+import { SITE_URL, SITE_NAME } from '@/lib/constants'
 import { formatDate } from '@/lib/utils/date'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -158,13 +159,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const { slug } = await params
     const post = await getPostBySlug(slug)
+    const url = `${SITE_URL}/news/${slug}`
     return {
       title: post.title,
       description: post.excerpt || undefined,
+      alternates: { canonical: url },
       openGraph: {
         title: post.title,
         description: post.excerpt || undefined,
-        images: post.cover_url ? [{ url: post.cover_url }] : [],
+        type: 'article',
+        url,
+        publishedTime: post.published_at || undefined,
+        authors: post.author?.full_name ? [post.author.full_name] : undefined,
+        images: post.cover_url ? [{ url: post.cover_url }] : undefined,
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: post.title,
+        description: post.excerpt || undefined,
+        images: post.cover_url ? [post.cover_url] : undefined,
       },
     }
   } catch {
@@ -183,10 +196,37 @@ export default async function NewsArticlePage({ params }: Props) {
 
   const relatedPosts = await getPublishedPosts({ limit: 3 }).catch(() => [])
 
-  const articleUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://rotaractd2451.org'}/news/${slug}`
+  const articleUrl = `${SITE_URL}/news/${slug}`
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title.slice(0, 110),
+    description: post.excerpt || undefined,
+    image: post.cover_url ? [post.cover_url] : [`${SITE_URL}/opengraph-image`],
+    datePublished: post.published_at || undefined,
+    dateModified: post.updated_at || post.published_at || undefined,
+    author: {
+      '@type': 'Person',
+      name: post.author?.full_name || SITE_NAME,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Rotaract District 2451',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/icon.png`,
+      },
+    },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': articleUrl },
+  }
 
   return (
     <div className="flex flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <article className="py-12">
         <div className="container mx-auto px-4">
           <div className="mb-6">

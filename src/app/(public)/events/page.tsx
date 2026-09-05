@@ -24,15 +24,22 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('')
+  const [eventType, setEventType] = useState('')
   const [view, setView] = useState<'grid' | 'list'>('grid')
   const [page, setPage] = useState(1)
   const [tab, setTab] = useState('upcoming')
+
+  useEffect(() => {
+    const type = new URLSearchParams(window.location.search).get('type')
+    if (type === 'event' || type === 'conference') setEventType(type)
+  }, [])
 
   const fetchEvents = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
       if (category) params.set('category', category)
+      if (eventType) params.set('type', eventType)
       if (tab === 'past') params.set('status', 'completed,published')
       params.set('limit', String(EVENTS_PER_PAGE))
       params.set('offset', String((page - 1) * EVENTS_PER_PAGE))
@@ -46,7 +53,7 @@ export default function EventsPage() {
     } finally {
       setLoading(false)
     }
-  }, [category, page, tab])
+  }, [category, eventType, page, tab])
 
   useEffect(() => { fetchEvents() }, [fetchEvents])
 
@@ -98,6 +105,25 @@ export default function EventsPage() {
                 </button>
               </div>
             </div>
+          </div>
+
+          <div className="mb-4 flex flex-wrap gap-2">
+            {([
+              { value: '', label: 'All Types' },
+              { value: 'event', label: 'Events' },
+              { value: 'conference', label: 'Conferences' },
+            ] as const).map((t) => (
+              <button
+                key={t.value}
+                onClick={() => { setEventType(t.value); setPage(1) }}
+                className={cn(
+                  'rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
+                  eventType === t.value ? 'bg-gradient-to-br from-navy to-cranberry text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
 
           <div className="mb-8 flex flex-wrap gap-2">
@@ -182,6 +208,7 @@ export default function EventsPage() {
                             )}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                             <div className="absolute bottom-3 left-3 right-3">
+                              {event.event_type === 'conference' && <Badge variant="cranberry" className="mr-1">Conference</Badge>}
                               {event.category && <Badge variant="secondary">{event.category}</Badge>}
                               <p className="mt-1 text-sm text-white/90">
                                 {!isEventPast(event.start_at)
@@ -237,6 +264,7 @@ export default function EventsPage() {
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="mb-1 flex items-center gap-2">
+                              {event.event_type === 'conference' && <Badge variant="cranberry" className="text-xs">Conference</Badge>}
                               {event.category && <Badge variant="outline" className="text-xs">{event.category}</Badge>}
                             </div>
                             <h3 className="font-semibold text-navy group-hover:text-cranberry">{event.title}</h3>

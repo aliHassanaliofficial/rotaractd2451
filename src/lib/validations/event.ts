@@ -20,6 +20,8 @@ export const eventSchema = z.object({
   registration_type: z.enum(['public', 'members_only']).default('public'),
   price: z.number().min(0).default(0),
   currency: z.string().default('EGP'),
+  event_type: z.enum(['event', 'conference']).default('event'),
+  show_capacity: z.boolean().default(true),
   status: z.enum(['draft', 'published', 'cancelled', 'completed']).default('draft'),
   host_club_id: z.string().uuid().nullish(),
   organizer_id: z.string().uuid().nullish(),

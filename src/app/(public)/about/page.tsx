@@ -1,12 +1,21 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { getSiteSettingsServer, getLeadershipYearsServer, getLeadershipByYearServer } from '@/lib/supabase/queries/settings.server'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Target, Eye, Award, Users, Globe, Heart, BookOpen, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+import { formatRotaryYear } from '@/lib/utils/date'
 
 const iconMap: Record<string, typeof Award> = {
   Award, Globe, Heart, BookOpen, Users, Sparkles, Target, Eye,
+}
+
+export const metadata: Metadata = {
+  title: 'About Us',
+  description:
+    'Learn about Rotaract District 2451 Egypt — our mission, vision, leadership team, achievements, and the Rotary movement empowering young leaders aged 18-30.',
+  alternates: { canonical: '/about' },
 }
 
 const defaultAbout = {
@@ -134,7 +143,7 @@ export default async function AboutPage({ searchParams }: { searchParams: Promis
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   )}
                 >
-                  RY {y}
+                  {formatRotaryYear(y)}
                 </Link>
               ))}
             </div>
@@ -142,7 +151,7 @@ export default async function AboutPage({ searchParams }: { searchParams: Promis
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {leadership.length === 0 ? (
               <p className="col-span-full py-12 text-center text-gray-400">
-                No leadership entries for RY {currentYear}
+                No leadership entries for {formatRotaryYear(currentYear)}
               </p>
             ) : (
               leadership.map((leader) => (
@@ -210,7 +219,7 @@ export default async function AboutPage({ searchParams }: { searchParams: Promis
               return (
                 <div key={i} className="rounded-2xl border border-gold/10 bg-white p-6 text-center shadow-sm">
                   <Icon className="mx-auto mb-3 h-8 w-8 text-gold" />
-                  <p className="text-3xl font-bold text-navy">{stat.value}</p>
+                  <p className="text-3xl font-bold text-navy">{stat.value.replace(/\+$/, '')}</p>
                   <p className="mt-1 text-sm text-gray-500">{stat.label}</p>
                 </div>
               )

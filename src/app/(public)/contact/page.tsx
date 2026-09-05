@@ -37,7 +37,7 @@ const faqs = [
 export default function ContactPage() {
   const { settings } = useSiteSettings()
   const contact = settings.contact_info || {}
-  const email = contact.email || 'info@rotaractd2451.org'
+  const email = contact.email || 'info@rotaract2451.org'
   const phone = contact.phone || '+20 100 000 0000'
   const location = contact.address || 'Egypt'
   const mapEmbed = contact.map_embed_url || 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3456.789!2d31.2357!3d30.0444!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzDCsDAyJzQwLjAiTiAzMcKwMTQnMDguNSJF!5e0!3m2!1sen!2seg!4v1'

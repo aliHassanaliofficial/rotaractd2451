@@ -30,7 +30,7 @@ export function Footer() {
   const tagline = settings.district_theme
     ? `${districtName} - ${settings.district_theme}`
     : 'Empowering young leaders to create positive change in communities across Egypt.'
-  const email = contact.email || 'info@rotaractd2451.org'
+  const email = contact.email || 'info@rotaract2451.org'
   const phone = contact.phone || '+20 100 000 0000'
   const address = contact.address || 'Egypt'
   const socialLinks = SOCIAL_ICONS.map(({ key, path, label }) =>
@@ -128,8 +128,8 @@ export function Footer() {
           <p className="text-sm text-gray-400">
             &copy; {new Date().getFullYear()} {districtName}. All rights reserved.
           </p>
-          <p className="mt-1 text-xs text-gray-500">
-            Rotary International &reg; and Rotaract &reg; are registered trademarks of Rotary International.
+          <p className="mt-1 text-sm text-gray-500">
+            Powered by <a href="https://eraengines.com" target="_blank" rel="noopener noreferrer" className="text-gold hover:underline">Era Engines</a>
           </p>
         </div>
       </div>

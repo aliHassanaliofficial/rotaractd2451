@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   Bell,
+  Calendar,
   User,
   LogOut,
   ChevronDown,
@@ -41,6 +42,11 @@ const RESOURCE_ICONS: Record<string, LucideIcon> = {
   newsletter: Mail,
 }
 
+const EVENTS_LINKS = [
+  { href: '/events', label: 'Events', icon: Calendar },
+  { href: '/events?type=conference', label: 'Conference', icon: Sparkles },
+]
+
 type NotificationItem = {
   id: string
   title: string
@@ -55,11 +61,13 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mobileResourcesOpen, setMobileResourcesOpen] = useState(false)
   const [resourcesOpen, setResourcesOpen] = useState(false)
+  const [eventsOpen, setEventsOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [recentNotifs, setRecentNotifs] = useState<NotificationItem[]>([])
   const notifRef = useRef<HTMLDivElement>(null)
   const resourcesRef = useRef<HTMLDivElement>(null)
+  const eventsRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
   const { user, profile } = useUser()
   const { isAdmin } = useRole()
@@ -132,6 +140,9 @@ export function Navbar() {
       if (resourcesRef.current && !resourcesRef.current.contains(e.target as Node)) {
         setResourcesOpen(false)
       }
+      if (eventsRef.current && !eventsRef.current.contains(e.target as Node)) {
+        setEventsOpen(false)
+      }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
@@ -180,6 +191,95 @@ export function Navbar() {
         <nav className="hidden items-center gap-1 lg:flex">
           {NAV_LINKS.map((link) => {
             const active = pathname === link.href
+            if (link.href === '/events') {
+              return (
+                <div
+                  key={link.href}
+                  ref={eventsRef}
+                  className="relative"
+                  onMouseEnter={() => setEventsOpen(true)}
+                  onMouseLeave={() => setEventsOpen(false)}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setEventsOpen((o) => !o)}
+                    aria-expanded={eventsOpen}
+                    className={cn(
+                      'relative flex items-center gap-1 px-3 py-2 text-sm font-medium transition-colors duration-200',
+                      'after:absolute after:-bottom-0.5 after:left-1/2 after:h-0.5 after:w-6 after:-translate-x-1/2 after:origin-center after:scale-x-0 after:rounded-full after:bg-gold after:transition-transform after:duration-300 hover:after:scale-x-100',
+                      eventsOpen || pathname.startsWith('/events')
+                        ? 'text-cranberry'
+                        : 'text-gray-600 hover:text-cranberry'
+                    )}
+                  >
+                    Events
+                    <motion.span
+                      animate={{ rotate: eventsOpen ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="flex"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </motion.span>
+                  </button>
+
+                  <AnimatePresence>
+                    {eventsOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.97 }}
+                        transition={{ duration: 0.16, ease: 'easeOut' }}
+                        className="absolute left-3 top-full z-50 w-56 pt-3"
+                      >
+                        <div className="absolute left-8 top-[9px] h-3 w-3 -translate-x-1/2 rotate-45 rounded-[3px] border-l border-t border-white/40 bg-white/90 backdrop-blur-xl" />
+                        <div className="overflow-hidden rounded-2xl border border-white/40 bg-white/90 shadow-2xl shadow-navy/10 backdrop-blur-xl">
+                          <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-3">
+                            <Sparkles className="h-4 w-4 text-gold" />
+                            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Discover</p>
+                          </div>
+                          <div className="p-2">
+                            {EVENTS_LINKS.map((item, i) => {
+                              const itemActive = pathname.startsWith('/events')
+                              return (
+                                <motion.div
+                                  key={item.href}
+                                  initial={{ opacity: 0, x: -8 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: 0.03 + i * 0.04 }}
+                                >
+                                  <Link
+                                    href={item.href}
+                                    onClick={() => setEventsOpen(false)}
+                                    className={cn(
+                                      'group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors duration-200',
+                                      itemActive ? 'bg-cranberry/5' : 'hover:bg-gold/10'
+                                    )}
+                                  >
+                                    <span
+                                      className={cn(
+                                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all duration-200',
+                                        itemActive
+                                          ? 'bg-cranberry text-white'
+                                          : 'bg-gradient-to-br from-gold/15 to-cranberry/15 text-cranberry group-hover:from-cranberry group-hover:to-deep-cranberry group-hover:text-white'
+                                      )}
+                                    >
+                                      <item.icon className="h-5 w-5" />
+                                    </span>
+                                    <span className="text-sm font-semibold text-navy transition-colors group-hover:text-cranberry">
+                                      {item.label}
+                                    </span>
+                                  </Link>
+                                </motion.div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )
+            }
             return (
               <Link
                 key={link.href}

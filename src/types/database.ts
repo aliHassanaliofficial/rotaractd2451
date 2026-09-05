@@ -1,7 +1,7 @@
 export type UserRole = 'member' | 'club_admin' | 'district_admin' | 'superadmin';
 export type EventStatus = 'draft' | 'published' | 'cancelled' | 'completed';
 export type CalendarType = 'event' | 'project' | 'meeting';
-export type RegStatus = 'pending' | 'confirmed' | 'cancelled' | 'attended';
+export type RegStatus = 'pending' | 'confirmed' | 'cancelled' | 'declined' | 'attended';
 export type PostStatus = 'draft' | 'published' | 'archived';
 export type MediaType = 'image' | 'video' | 'document' | 'pdf';
 export type AnnouncementPriority = 'normal' | 'important' | 'urgent';
@@ -94,11 +94,13 @@ export interface Event {
   is_online: boolean;
   online_url?: string;
   capacity?: number;
+  show_capacity: boolean;
   registration_open: boolean;
   registration_deadline?: string;
   registration_type: 'public' | 'members_only';
   price: number;
   currency: string;
+  event_type: 'event' | 'conference';
   status: EventStatus;
   host_club_id?: string;
   organizer_id?: string;
@@ -113,6 +115,26 @@ export interface Event {
   organizer?: Profile;
 }
 
+export type TransactionMethodType =
+  | 'transfer'
+  | 'card'
+  | 'mobile'
+  | 'cash'
+  | 'bank_deposit'
+  | 'other';
+
+export interface TransactionMethod {
+  id: string;
+  name: string;
+  description?: string;
+  instructions?: string;
+  is_active: boolean;
+  sort_order: number;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Registration {
   id: string;
   event_id: string;
@@ -125,12 +147,15 @@ export interface Registration {
   ticket_number?: string;
   status: RegStatus;
   notes?: string;
+  transaction_method_id?: string;
+  transaction_proof_url?: string;
   checked_in_at?: string;
   checked_in_by?: string;
   registered_at: string;
   updated_at: string;
   event?: Event;
   profile?: Profile;
+  transaction_method?: TransactionMethod;
 }
 
 export interface Post {

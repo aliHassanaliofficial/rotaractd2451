@@ -29,6 +29,8 @@ const defaultEvents: Event[] = [
     currency: 'EGP',
     is_online: false,
     registration_type: 'public',
+    event_type: 'event',
+    show_capacity: true,
     status: 'published',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -48,6 +50,8 @@ const defaultEvents: Event[] = [
     currency: 'EGP',
     is_online: false,
     registration_type: 'public',
+    event_type: 'event',
+    show_capacity: true,
     status: 'published',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -67,6 +71,8 @@ const defaultEvents: Event[] = [
     currency: 'EGP',
     is_online: false,
     registration_type: 'public',
+    event_type: 'event',
+    show_capacity: true,
     status: 'published',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -86,6 +92,8 @@ const defaultEvents: Event[] = [
     currency: 'EGP',
     is_online: false,
     registration_type: 'public',
+    event_type: 'event',
+    show_capacity: true,
     status: 'published',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -106,6 +114,8 @@ const defaultEvents: Event[] = [
     is_online: true,
     online_url: 'https://zoom.us/...',
     registration_type: 'public',
+    event_type: 'event',
+    show_capacity: true,
     status: 'published',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -161,7 +171,7 @@ export function UpcomingEvents({ events = defaultEvents }: UpcomingEventsProps) 
                         <MapPin className="h-4 w-4 text-cranberry" />
                         <span className="line-clamp-1">{event.location}</span>
                       </div>
-                      {event.capacity && (
+                      {event.capacity && event.show_capacity && (
                         <div className="flex items-center gap-2">
                           <Users className="h-4 w-4 text-navy" />
                           <span>Capacity: {event.capacity}</span>

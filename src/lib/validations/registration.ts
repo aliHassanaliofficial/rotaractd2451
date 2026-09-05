@@ -8,6 +8,8 @@ export const registrationSchema = z.object({
   guest_phone: z.string().optional(),
   guest_club: z.string().optional(),
   notes: z.string().optional(),
+  transaction_method_id: z.string().uuid().optional(),
+  transaction_proof_url: z.string().optional(),
 })
 
 export const guestRegistrationSchema = z.object({
@@ -17,6 +19,8 @@ export const guestRegistrationSchema = z.object({
   guest_phone: z.string().optional(),
   guest_club: z.string().optional(),
   notes: z.string().optional(),
+  transaction_method_id: z.string().uuid().optional(),
+  transaction_proof_url: z.string().optional(),
 })
 
 export type RegistrationFormData = z.infer<typeof registrationSchema>

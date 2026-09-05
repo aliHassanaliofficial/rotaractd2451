@@ -119,7 +119,12 @@ export default function CheckinPage() {
     setCheckingIn(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      await checkInAttendee(regId, user?.id || '')
+      const updated = await checkInAttendee(regId, user?.id || '')
+      if (!updated) {
+        playBeep('error')
+        toast.error('Only confirmed registrations can be checked in')
+        return
+      }
       setRegistrations((prev) =>
         prev.map((r) =>
           r.id === regId
@@ -267,15 +272,20 @@ export default function CheckinPage() {
                   )}
                 </div>
 
-                {scannedReg.status !== 'attended' ? (
+                {scannedReg.status === 'confirmed' ? (
                   <Button className="w-full" onClick={() => handleCheckIn(scannedReg.id)} disabled={checkingIn}>
                     {checkingIn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserCheck className="mr-2 h-4 w-4" />}
                     Mark as Attended
                   </Button>
-                ) : (
+                ) : scannedReg.status === 'attended' ? (
                   <div className="flex items-center justify-center gap-2 rounded-2xl bg-green-50 p-3 text-green-700">
                     <CheckCircle2 className="h-5 w-5" />
                     Already checked in {scannedReg.checked_in_at && `at ${formatDateTime(scannedReg.checked_in_at)}`}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-2 rounded-2xl bg-red-50 p-3 text-red-700">
+                    <XCircle className="h-5 w-5" />
+                    This ticket is {scannedReg.status} and cannot be checked in.
                   </div>
                 )}
               </div>

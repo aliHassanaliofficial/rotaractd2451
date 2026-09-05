@@ -169,3 +169,34 @@ DO $$ BEGIN
       AND (storage.foldername(name))[1] = auth.uid()::text);
 EXCEPTION WHEN undefined_table THEN NULL;
 END $$;
+
+-- ── REGISTRATION PROOFS (payment proof uploads) ──────────────
+DO $$ BEGIN
+  DROP POLICY IF EXISTS "proof_read_public" ON storage.objects;
+  CREATE POLICY "proof_read_public" ON storage.objects FOR SELECT
+    USING (bucket_id = 'registration-proofs');
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  DROP POLICY IF EXISTS "proof_write_authenticated" ON storage.objects;
+  CREATE POLICY "proof_write_authenticated" ON storage.objects FOR INSERT TO authenticated
+    WITH CHECK (bucket_id = 'registration-proofs');
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  DROP POLICY IF EXISTS "proof_update_admin" ON storage.objects;
+  CREATE POLICY "proof_update_admin" ON storage.objects FOR UPDATE TO authenticated
+    USING (bucket_id = 'registration-proofs'
+      AND get_user_role() IN ('district_admin','superadmin'));
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  DROP POLICY IF EXISTS "proof_delete_admin" ON storage.objects;
+  CREATE POLICY "proof_delete_admin" ON storage.objects FOR DELETE TO authenticated
+    USING (bucket_id = 'registration-proofs'
+      AND get_user_role() IN ('district_admin','superadmin'));
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;

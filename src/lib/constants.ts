@@ -9,6 +9,15 @@ export const EVENT_CATEGORIES = [
   'Workshop',
 ] as const
 
+export const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL || 'https://rotaract2451.org'
+).replace(/\/$/, '')
+
+export const SITE_NAME = 'Rotaract D2451'
+
+export const SITE_DESCRIPTION =
+  'Rotaract District 2451 (D2451) brings together young leaders across Egypt to create positive change through service, professional development, and fellowship.'
+
 export const CALENDAR_TYPES = [
   { value: 'event', label: 'Event', dot: 'bg-red-500', badge: 'bg-red-100 text-red-700', bar: 'bg-red-500', solid: 'bg-red-500 text-white' },
   { value: 'project', label: 'Project', dot: 'bg-blue-500', badge: 'bg-blue-100 text-blue-700', bar: 'bg-blue-500', solid: 'bg-blue-500 text-white' },
@@ -63,6 +72,7 @@ export const REG_STATUS_LABELS: Record<string, string> = {
   pending: 'Pending',
   confirmed: 'Confirmed',
   cancelled: 'Cancelled',
+  declined: 'Declined',
   attended: 'Attended',
 }
 
@@ -70,8 +80,16 @@ export const REG_STATUS_COLORS: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-800',
   confirmed: 'bg-green-100 text-green-800',
   cancelled: 'bg-red-100 text-red-800',
+  declined: 'bg-red-100 text-red-800',
   attended: 'bg-blue-100 text-blue-800',
 }
+
+export const EVENT_TYPES = [
+  { value: 'event', label: 'Event' },
+  { value: 'conference', label: 'Conference' },
+] as const
+
+export type EventTypeValue = (typeof EVENT_TYPES)[number]['value']
 
 export const STORAGE_BUCKETS = {
   AVATARS: 'avatars',
@@ -80,6 +98,7 @@ export const STORAGE_BUCKETS = {
   GALLERY: 'gallery',
   LIBRARY: 'library',
   DOCUMENTS: 'documents',
+  REGISTRATION_PROOFS: 'registration-proofs',
 } as const
 
 export const NAV_LINKS = [

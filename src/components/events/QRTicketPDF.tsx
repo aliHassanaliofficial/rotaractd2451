@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Loader2, FileDown } from 'lucide-react'
 import { generateTicketPDF } from '@/lib/utils/pdf'
+import { getDistrictInfo } from '@/lib/supabase/queries/settings'
 
 interface QRTicketPDFProps {
   registration: {
@@ -27,7 +28,12 @@ export function QRTicketPDF({ registration, event, fileName = 'ticket.pdf' }: QR
   const handleDownload = async () => {
     setLoading(true)
     try {
-      const blob = await generateTicketPDF(registration, event)
+      const districtInfo = (await getDistrictInfo()) || {}
+      const blob = await generateTicketPDF(registration, event, {
+        districtName: (districtInfo.name as string) || 'Rotaract District 2451',
+        logoUrl: '/logo-white.png',
+        siteUrl: window.location.origin,
+      })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url

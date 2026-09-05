@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getClubById, updateClub, deleteClub, getClubOfficers, addClubOfficer, removeClubOfficer, getClubMembers } from '@/lib/supabase/queries/clubs'
 import { clubSchema, type ClubFormData } from '@/lib/validations/club'
 import { slugify } from '@/lib/utils/slugify'
+import { getCurrentRotaryYear } from '@/lib/utils/date'
 import { STORAGE_BUCKETS, OFFICER_POSITIONS } from '@/lib/constants'
 import { toast } from 'sonner'
 import { motion } from 'framer-motion'
@@ -179,7 +180,7 @@ export default function EditClubPage() {
         club_id: id,
         profile_id: newOfficerProfileId,
         position: newOfficerPosition,
-        year: new Date().getFullYear().toString(),
+        year: getCurrentRotaryYear(),
       })
       const updated = await getClubOfficers(id)
       setOfficers(updated as any)

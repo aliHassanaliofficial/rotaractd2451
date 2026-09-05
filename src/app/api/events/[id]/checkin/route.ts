@@ -51,6 +51,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       registration = data
     }
 
+    if (registration.status === 'pending') {
+      return NextResponse.json({ error: 'Registration is pending approval and cannot be checked in yet' }, { status: 400 })
+    }
+
+    if (registration.status === 'declined' || registration.status === 'cancelled') {
+      return NextResponse.json({ error: 'Registration is not valid for check-in' }, { status: 400 })
+    }
+
     if (registration.status === 'attended') {
       return NextResponse.json({
         error: 'Already checked in',

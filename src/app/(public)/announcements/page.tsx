@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { getAllAnnouncements } from '@/lib/supabase/queries/posts'
 import { formatDate } from '@/lib/utils/date'
 import { cn } from '@/lib/utils/cn'
@@ -8,6 +9,13 @@ import { Separator } from '@/components/ui/separator'
 import { Megaphone, Pin, Calendar, ArrowRight } from 'lucide-react'
 import { ANNOUNCEMENT_PRIORITIES } from '@/lib/constants'
 import type { Post } from '@/types/database'
+
+export const metadata: Metadata = {
+  title: 'Announcements',
+  description:
+    'Official announcements and updates from Rotaract District 2451 Egypt — district news, circulars, and important notices for all clubs.',
+  alternates: { canonical: '/announcements' },
+}
 
 export default async function AnnouncementsPage() {
   const announcements = await getAllAnnouncements().catch(() => [])

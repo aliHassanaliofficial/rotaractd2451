@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { formatDate, formatEventDateRange } from '@/lib/utils/date'
 import { Calendar, MapPin, Download, Share2, ArrowLeft, Ticket, Loader2, FileDown, ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
+import { SITE_URL } from '@/lib/constants'
 import type { Registration } from '@/types/database'
 
 interface Props {
@@ -90,7 +91,7 @@ export default function TicketPage({ params, searchParams }: Props) {
 
   const shareWhatsApp = () => {
     if (!registration?.event) return
-    const eventUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://rotaractd2451.org'}/events/${slug}`
+    const eventUrl = `${SITE_URL}/events/${slug}`
     const text = `I'm attending ${registration.event.title}! Here's my ticket.`
     window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + eventUrl)}`, '_blank')
   }
@@ -119,6 +120,7 @@ export default function TicketPage({ params, searchParams }: Props) {
   const event = registration.event!
   const attendeeName = registration.profile?.full_name || registration.guest_name || 'Attendee'
   const attendeeEmail = registration.profile?.email || registration.guest_email || ''
+  const downloadable = ['confirmed', 'attended'].includes(registration.status)
 
   return (
     <div className="flex flex-col items-center py-12">
@@ -131,6 +133,28 @@ export default function TicketPage({ params, searchParams }: Props) {
             </Link>
           </Button>
         </div>
+
+        {registration.status === 'pending' && (
+          <div className="mb-6 rounded-2xl border border-yellow-200 bg-yellow-50 px-5 py-4">
+            <p className="text-sm font-medium text-yellow-800">
+              Your registration is awaiting payment approval.
+            </p>
+            <p className="mt-1 text-sm text-yellow-700">
+              Once our team verifies your payment, your ticket will be activated and available for download here.
+            </p>
+          </div>
+        )}
+
+        {registration.status === 'declined' && (
+          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
+            <p className="text-sm font-medium text-red-800">
+              Your registration was declined.
+            </p>
+            <p className="mt-1 text-sm text-red-700">
+              If you believe this is an error, please contact the registration team.
+            </p>
+          </div>
+        )}
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -208,20 +232,22 @@ export default function TicketPage({ params, searchParams }: Props) {
           </div>
         </motion.div>
 
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Button onClick={downloadPNG} disabled={downloading === 'png'} className="bg-gradient-to-br from-navy to-cranberry text-white hover:brightness-110">
-            {downloading === 'png' ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <ImageIcon className="mr-1 h-4 w-4" />}
-            Download PNG
-          </Button>
-          <Button onClick={downloadPDF} disabled={downloading === 'pdf'} className="bg-cranberry text-white hover:bg-cranberry/90">
-            {downloading === 'pdf' ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <FileDown className="mr-1 h-4 w-4" />}
-            Download PDF
-          </Button>
-          <Button variant="outline" onClick={shareWhatsApp}>
-            <Share2 className="mr-1 h-4 w-4" />
-            Share via WhatsApp
-          </Button>
-        </div>
+        {downloadable && (
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Button onClick={downloadPNG} disabled={downloading === 'png'} className="bg-gradient-to-br from-navy to-cranberry text-white hover:brightness-110">
+              {downloading === 'png' ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <ImageIcon className="mr-1 h-4 w-4" />}
+              Download PNG
+            </Button>
+            <Button onClick={downloadPDF} disabled={downloading === 'pdf'} className="bg-cranberry text-white hover:bg-cranberry/90">
+              {downloading === 'pdf' ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <FileDown className="mr-1 h-4 w-4" />}
+              Download PDF
+            </Button>
+            <Button variant="outline" onClick={shareWhatsApp}>
+              <Share2 className="mr-1 h-4 w-4" />
+              Share via WhatsApp
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   )

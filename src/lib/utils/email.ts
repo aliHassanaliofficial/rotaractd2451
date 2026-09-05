@@ -60,3 +60,44 @@ export function getRegistrationConfirmationHtml(eventName: string, date: string,
     </div>
   `
 }
+
+export function getRegistrationPendingHtml(eventName: string, date: string, amount: string, methodName: string) {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: #003865; padding: 20px; text-align: center;">
+        <h1 style="color: #F7A81B; margin: 0;">Rotaract</h1>
+      </div>
+      <div style="padding: 30px; background: #f8f9fa;">
+        <h2>Registration Received!</h2>
+        <p>Thank you for registering for:</p>
+        <h3 style="color: #003865;">${eventName}</h3>
+        <p><strong>Date:</strong> ${date}</p>
+        <p><strong>Fee:</strong> ${amount} via ${methodName}</p>
+        <p>Your registration is <strong>awaiting payment approval</strong>. Our team will review your payment and confirm your registration shortly. Once approved, you will receive your e-ticket by email.</p>
+      </div>
+      <div style="background: #D91B5C; padding: 15px; text-align: center; color: white;">
+        <p style="margin: 0;">Rotaract</p>
+      </div>
+    </div>
+  `
+}
+
+export function getRegistrationDeclinedHtml(eventName: string) {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: #003865; padding: 20px; text-align: center;">
+        <h1 style="color: #F7A81B; margin: 0;">Rotaract</h1>
+      </div>
+      <div style="padding: 30px; background: #f8f9fa;">
+        <h2>Registration Declined</h2>
+        <p>We're sorry, but your registration for:</p>
+        <h3 style="color: #003865;">${eventName}</h3>
+        <p>could not be approved. Your payment could not be verified and no amount has been charged to you.</p>
+        <p>If you believe this is an error, please contact the registration team with your name and the event details.</p>
+      </div>
+      <div style="background: #D91B5C; padding: 15px; text-align: center; color: white;">
+        <p style="margin: 0;">Rotaract</p>
+      </div>
+    </div>
+  `
+}

@@ -304,7 +304,7 @@ CREATE TABLE IF NOT EXISTS newsletter_subscribers (
 
 -- ── DEFAULT SETTINGS ────────────────────────────────────────
 INSERT INTO site_settings (key, value) VALUES
-  ('district_info', '{"name":"Rotaract District 2451","year":"2026-2027","governor":"","theme":"","logo_url":"","hero_video_url":"","social":{}}'::jsonb),
+  ('district_info', '{"name":"Rotaract District 2451","year":"26/27","governor":"","theme":"","logo_url":"","hero_video_url":"","social":{}}'::jsonb),
   ('hero_slides', '[]'::jsonb),
   ('contact_info', '{"email":"","phone":"","address":"","map_embed_url":""}'::jsonb),
   ('feature_flags', '{"registration_open":true,"guest_registration":true,"show_member_directory":true,"gallery_public":true}'::jsonb)
