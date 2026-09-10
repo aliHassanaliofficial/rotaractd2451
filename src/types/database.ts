@@ -263,6 +263,41 @@ export interface DistrictLeadership {
   photo_url?: string;
 }
 
+export interface Award {
+  id: string;
+  title: string;
+  recipient?: string;
+  category?: string;
+  year?: string;
+  description?: string;
+  image_url?: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BlacklistEntry {
+  id: string;
+  name: string;
+  phone?: string;
+  email?: string;
+  reason?: string;
+  added_by?: string;
+  created_at: string;
+}
+
+export interface AnalyticsEntry {
+  id: string;
+  label: string;
+  value: number;
+  suffix?: string;
+  category?: string;
+  note?: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ContactMessage {
   id: string;
   name: string;

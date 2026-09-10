@@ -87,6 +87,38 @@ export async function registerForEvent(deps: WorkflowDeps): Promise<WorkflowResu
     }
   }
 
+  const normalizePhone = (p?: string | null) => {
+    if (!p) return ''
+    let d = p.replace(/\D/g, '')
+    if (d.startsWith('20') && d.length > 9) d = '0' + d.slice(2)
+    return d
+  }
+  const normalizeEmail = (e?: string | null) => (e || '').trim().toLowerCase()
+
+  const memberPhone = user
+    ? (await admin.from('profiles').select('phone').eq('id', user.id).maybeSingle()).data?.phone
+    : null
+  const identityEmail = user?.email || parsed.guest_email
+  const identityPhone = user ? memberPhone : parsed.guest_phone
+
+  if (identityEmail || identityPhone) {
+    const { data: blockedContacts } = await admin
+      .from('blacklist')
+      .select('phone, email')
+    if (blockedContacts && blockedContacts.length > 0) {
+      const normEmail = normalizeEmail(identityEmail)
+      const normPhone = normalizePhone(identityPhone)
+      const isBlocked = blockedContacts.some(
+        (b) =>
+          (normEmail && normalizeEmail(b.email) === normEmail) ||
+          (normPhone && normalizePhone(b.phone) === normPhone)
+      )
+      if (isBlocked) {
+        throw new WorkflowError('Registration blocked: this contact is on the district blacklist', 403)
+      }
+    }
+  }
+
   const isPaid = event.price > 0
   let transactionMethod: { id: string; name: string } | undefined
 

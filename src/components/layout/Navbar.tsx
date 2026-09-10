@@ -23,6 +23,8 @@ import {
   Megaphone,
   Landmark,
   Mail,
+  Award,
+  Ban,
   Sparkles,
   type LucideIcon,
 } from 'lucide-react'
@@ -39,12 +41,14 @@ const RESOURCE_ICONS: Record<string, LucideIcon> = {
   library: Library,
   announcements: Megaphone,
   history: Landmark,
+  awards: Award,
+  blacklist: Ban,
   newsletter: Mail,
 }
 
 const EVENTS_LINKS = [
   { href: '/events', label: 'Events', icon: Calendar },
-  { href: '/events?type=conference', label: 'Conference', icon: Sparkles },
+  { href: '/conference', label: 'Conference', icon: Sparkles },
 ]
 
 type NotificationItem = {
@@ -239,7 +243,7 @@ export function Navbar() {
                           </div>
                           <div className="p-2">
                             {EVENTS_LINKS.map((item, i) => {
-                              const itemActive = pathname.startsWith('/events')
+                              const itemActive = pathname.startsWith(item.href)
                               return (
                                 <motion.div
                                   key={item.href}

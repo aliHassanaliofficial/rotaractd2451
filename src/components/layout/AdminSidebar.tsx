@@ -22,6 +22,8 @@ import {
   Shield,
   ClipboardCheck,
   Award,
+  Trophy,
+  Ban,
   Globe,
   Wallet,
 } from 'lucide-react'
@@ -40,12 +42,15 @@ const sidebarLinks = [
   { href: '/admin/announcements', label: 'Announcements', icon: Megaphone },
   { href: '/admin/clubs', label: 'Clubs', icon: Building2 },
   { href: '/admin/members', label: 'Members', icon: Users },
+  { href: '/admin/blacklist', label: 'Blacklist', icon: Ban },
   { href: '/admin/leadership', label: 'Leadership', icon: Award },
+  { href: '/admin/awards', label: 'Awards', icon: Trophy },
   { href: '/admin/gallery', label: 'Gallery', icon: ImageIcon },
   { href: '/admin/library', label: 'Library', icon: BookOpen },
   { href: '/admin/messages', label: 'Messages', icon: MessageSquare },
   { href: '/admin/notifications', label: 'Notifications', icon: Bell },
   { href: '/admin/reports', label: 'Reports', icon: BarChart3 },
+  { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/admin/about', label: 'About Page', icon: Globe },
 ]
 

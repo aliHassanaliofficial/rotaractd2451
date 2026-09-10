@@ -33,11 +33,28 @@ export function formatEventDateRange(start: string | Date, end: string | Date) {
   return `${format(s, 'MMM d, h:mm a')} - ${format(e, 'MMM d, yyyy • h:mm a')}`
 }
 
-export function getCurrentRotaryYear() {
-  const now = new Date()
-  const year = now.getFullYear()
-  const startYear = now.getMonth() >= 6 ? year : year - 1
+export function getRotaryYear(date: string | Date): string {
+  const d = new Date(date)
+  const year = d.getFullYear()
+  const startYear = d.getMonth() >= 6 ? year : year - 1
   return `${startYear.toString().slice(-2)}/${(startYear + 1).toString().slice(-2)}`
+}
+
+export function getCurrentRotaryYear() {
+  return getRotaryYear(new Date())
+}
+
+export function getRotaryYearRange(year: string): { start: Date; end: Date } {
+  const isFull = year.includes('-')
+  const pattern = isFull ? /^(\d{4})-(\d{4})$/ : /^(\d{2})\/(\d{2})$/
+  const match = year.match(pattern)
+  if (!match) return { start: new Date(), end: new Date() }
+  const first = parseInt(match[1], 10)
+  const startYear = isFull ? first : 2000 + first
+  return {
+    start: new Date(startYear, 6, 1),
+    end: new Date(startYear + 1, 5, 30),
+  }
 }
 
 export function formatRotaryYear(year: string): string {

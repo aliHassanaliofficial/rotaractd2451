@@ -1,5 +1,5 @@
 import { createClient } from '../client'
-import type { SiteSetting, HistoryEntry, DistrictLeadership, ContactMessage, Notification, AuditLog } from '@/types/database'
+import type { SiteSetting, HistoryEntry, DistrictLeadership, Award, BlacklistEntry, ContactMessage, Notification, AuditLog } from '@/types/database'
 
 export async function getSiteSetting(key: string) {
   const supabase = createClient()
@@ -100,6 +100,28 @@ export async function getCurrentLeadership() {
   return data as DistrictLeadership[]
 }
 
+export async function getAwards() {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('awards')
+    .select('*')
+    .order('year', { ascending: false })
+    .order('sort_order', { ascending: true })
+
+  if (error) throw error
+  return data as Award[]
+}
+
+export async function getBlacklist() {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('blacklist')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return data as BlacklistEntry[]
+}
 export async function getLeadershipByYear(year: string) {
   const supabase = createClient()
   const { data, error } = await supabase

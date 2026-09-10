@@ -5,6 +5,7 @@ import { SiteChrome } from '@/components/layout/SiteChrome'
 import { Toaster } from '@/components/ui/sonner'
 import { QueryProvider } from '@/components/providers/QueryProvider'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
+import { Analytics } from '@vercel/analytics/next'
 import { MembershipGate } from '@/components/member/MembershipGate'
 import { InitialGate } from '@/components/layout/InitialGate'
 import { MaintenanceGate } from '@/components/layout/MaintenanceGate'
@@ -129,6 +130,7 @@ export default function RootLayout({
             <Toaster richColors position="top-right" />
           </ThemeProvider>
         </QueryProvider>
+        <Analytics />
       </body>
     </html>
   )

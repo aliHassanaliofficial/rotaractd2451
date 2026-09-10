@@ -116,5 +116,7 @@ export const RESOURCE_LINKS = [
   { href: '/library', label: 'Library', description: 'Documents & downloadable resources' },
   { href: '/announcements', label: 'Announcements', description: 'Official district updates' },
   { href: '/history', label: 'History', description: 'Our journey through the years' },
+  { href: '/awards', label: 'Awards', description: 'District awards & recognition' },
+  { href: '/blacklist', label: 'Blacklist', description: 'List of restricted individuals' },
   { href: '/newsletter', label: 'Newsletter', description: 'Subscribe to district news' },
 ] as const

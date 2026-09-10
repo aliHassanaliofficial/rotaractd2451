@@ -12,6 +12,7 @@ import {
   Award,
   ClipboardList,
   Activity,
+  BarChart3,
   ChevronLeft,
   ArrowLeft,
   LogOut,
@@ -26,6 +27,7 @@ const sidebarLinks = [
   { href: '/superadmin/history', label: 'History', icon: History },
   { href: '/admin/leadership', label: 'Leadership', icon: Award },
   { href: '/superadmin/audit-log', label: 'Audit Log', icon: ClipboardList },
+  { href: '/superadmin/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/superadmin/system', label: 'System Health', icon: Activity },
 ]
 
